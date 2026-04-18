@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Chuyển khoản</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+<h2>Chuyển khoản</h2>
+
+<form th:action="@{/banking}" method="post">
+
+    <p>
+        Người gửi:
+        <input type="text" name="From_account_id" placeholder="ACC001" required>
+    </p>
+
+    <p>
+        Người nhận:
+        <input type="text" name="To_account_id" placeholder="ACC002" required>
+    </p>
+
+    <p>
+        Số tiền:
+        <input type="number" name="amount" step="0.01" required>
+    </p>
+    <p>
+        Ghi chu:
+        <input type="text" name="description" placeholder="Nhap noi dung" required>
+    </p>
+
+    <button type="submit">Chuyển tiền</button>
+</form>
+
+<!-- Hiển thị kết quả -->
+<div th:if="${message}">
+    <p th:text="${message}"></p>
+</div>
+
+</body>
+</html>
