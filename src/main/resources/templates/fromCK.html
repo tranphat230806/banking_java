@@ -1,110 +1,217 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Chuyển khoản</title>
+    <title>Banking Transfer</title>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:'Segoe UI',sans-serif;
+        }
+
         body{
-            font-family: Arial, sans-serif;
-            background:#f5f7fa;
-            padding:40px;
-        }
-
-        .box{
-            width:420px;
-            background:white;
+            min-height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            background:linear-gradient(135deg,#0f172a,#1e3a8a,#2563eb);
             padding:30px;
-            border-radius:12px;
-            box-shadow:0 0 15px rgba(0,0,0,0.1);
         }
 
-        h2{
+        .card{
+            width:100%;
+            max-width:460px;
+            background:rgba(255,255,255,0.12);
+            backdrop-filter:blur(18px);
+            border:1px solid rgba(255,255,255,0.2);
+            border-radius:22px;
+            padding:32px;
+            box-shadow:0 15px 35px rgba(0,0,0,0.25);
+            color:white;
+            animation:fadeIn 0.7s ease;
+        }
+
+        @keyframes fadeIn{
+            from{
+                opacity:0;
+                transform:translateY(20px);
+            }
+            to{
+                opacity:1;
+                transform:translateY(0);
+            }
+        }
+
+        .top{
             text-align:center;
-            margin-bottom:25px;
+            margin-bottom:28px;
         }
 
-        p{
-            margin-bottom:15px;
+        .top h2{
+            font-size:28px;
+            margin-bottom:8px;
+        }
+
+        .top p{
+            color:#dbeafe;
+            font-size:14px;
+        }
+
+        .group{
+            margin-bottom:18px;
+        }
+
+        label{
+            display:block;
+            margin-bottom:8px;
+            font-size:14px;
+            font-weight:600;
         }
 
         input{
             width:100%;
-            padding:10px;
-            font-size:16px;
-            margin-top:5px;
-            box-sizing:border-box;
-        }
-
-        button{
-            padding:10px 18px;
+            padding:14px;
             border:none;
-            border-radius:6px;
-            cursor:pointer;
+            outline:none;
+            border-radius:12px;
+            background:rgba(255,255,255,0.15);
+            color:white;
             font-size:15px;
         }
 
-        .btn-transfer{
-            background:#007bff;
-            color:white;
-            width:100%;
-            margin-top:10px;
+        input::placeholder{
+            color:#dbeafe;
+        }
+
+        .row{
+            display:flex;
+            gap:10px;
+        }
+
+        .row input{
+            flex:1;
+        }
+
+        button{
+            border:none;
+            cursor:pointer;
+            transition:0.3s;
         }
 
         .btn-qr{
-            background:#28a745;
+            width:120px;
+            border-radius:12px;
+            background:#10b981;
             color:white;
-            margin-top:8px;
+            font-weight:600;
+        }
+
+        .btn-qr:hover{
+            background:#059669;
+            transform:scale(1.03);
+        }
+
+        .btn-transfer{
+            width:100%;
+            padding:15px;
+            margin-top:10px;
+            border-radius:14px;
+            font-size:16px;
+            font-weight:bold;
+            color:white;
+            background:linear-gradient(90deg,#06b6d4,#2563eb);
+        }
+
+        .btn-transfer:hover{
+            transform:translateY(-2px);
+            box-shadow:0 10px 20px rgba(37,99,235,0.4);
         }
 
         #reader{
-            margin-top:20px;
+            margin-top:18px;
             display:none;
+            border-radius:18px;
+            overflow:hidden;
         }
 
         .message{
-            margin-top:20px;
-            color:green;
-            font-weight:bold;
+            margin-top:18px;
+            padding:14px;
+            border-radius:12px;
+            background:rgba(16,185,129,0.2);
+            border:1px solid #10b981;
+            color:#d1fae5;
             text-align:center;
+            font-weight:600;
+        }
+
+        .footer{
+            text-align:center;
+            margin-top:20px;
+            color:#cbd5e1;
+            font-size:13px;
         }
     </style>
 </head>
 
 <body>
 
-<div class="box">
+<div class="card">
 
-    <h2>Chuyển khoản</h2>
+    <div class="top">
+        <h2>💳 Banking Transfer</h2>
+        <p>Chuyển tiền nhanh chóng & an toàn</p>
+    </div>
 
     <form th:action="@{/banking}" method="post">
 
-        <p>
-            Người gửi:
+        <div class="group">
+            <label>Người gửi</label>
             <input type="text" name="From_account_id" placeholder="ACC001" required>
-        </p>
+        </div>
 
-        <p>
-            Người nhận:
-            <input type="text" id="toAccount" name="To_account_id" placeholder="ACC002" required>
+        <div class="group">
+            <label>Người nhận</label>
 
-            <button type="button" class="btn-qr" onclick="openQR()">
-                Quét QR
-            </button>
-        </p>
+            <div class="row">
+                <input type="text" id="toAccount"
+                       name="To_account_id"
+                       placeholder="ACC002"
+                       required>
 
-        <p>
-            Số tiền:
-            <input type="number" id="amount" name="amount" step="0.01" required>
-        </p>
+                <button type="button"
+                        class="btn-qr"
+                        onclick="openQR()">
+                    📷 Quét QR
+                </button>
+            </div>
+        </div>
 
-        <p>
-            Ghi chú:
-            <input type="text" id="description" name="description" placeholder="Nhập nội dung" required>
-        </p>
+        <div class="group">
+            <label>Số tiền</label>
+            <input type="number"
+                   id="amount"
+                   name="amount"
+                   step="0.01"
+                   placeholder="500000"
+                   required>
+        </div>
+
+        <div class="group">
+            <label>Nội dung</label>
+            <input type="text"
+                   id="description"
+                   name="description"
+                   placeholder="Thanh toán hóa đơn"
+                   required>
+        </div>
 
         <button type="submit" class="btn-transfer">
-            Chuyển tiền
+            🚀 Chuyển Tiền Ngay
         </button>
 
     </form>
@@ -115,12 +222,15 @@
         <p th:text="${message}"></p>
     </div>
 
+    <div class="footer">
+        Secure Banking System © 2026
+    </div>
+
 </div>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <script>
-
     function openQR(){
 
         document.getElementById("reader").style.display = "block";
@@ -155,7 +265,6 @@
 
         });
     }
-
 </script>
 
 </body>
