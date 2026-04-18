@@ -3,39 +3,160 @@
 <head>
     <title>Chuyển khoản</title>
     <meta charset="UTF-8">
+
+    <style>
+        body{
+            font-family: Arial, sans-serif;
+            background:#f5f7fa;
+            padding:40px;
+        }
+
+        .box{
+            width:420px;
+            background:white;
+            padding:30px;
+            border-radius:12px;
+            box-shadow:0 0 15px rgba(0,0,0,0.1);
+        }
+
+        h2{
+            text-align:center;
+            margin-bottom:25px;
+        }
+
+        p{
+            margin-bottom:15px;
+        }
+
+        input{
+            width:100%;
+            padding:10px;
+            font-size:16px;
+            margin-top:5px;
+            box-sizing:border-box;
+        }
+
+        button{
+            padding:10px 18px;
+            border:none;
+            border-radius:6px;
+            cursor:pointer;
+            font-size:15px;
+        }
+
+        .btn-transfer{
+            background:#007bff;
+            color:white;
+            width:100%;
+            margin-top:10px;
+        }
+
+        .btn-qr{
+            background:#28a745;
+            color:white;
+            margin-top:8px;
+        }
+
+        #reader{
+            margin-top:20px;
+            display:none;
+        }
+
+        .message{
+            margin-top:20px;
+            color:green;
+            font-weight:bold;
+            text-align:center;
+        }
+    </style>
 </head>
+
 <body>
 
-<h2>Chuyển khoản</h2>
+<div class="box">
 
-<form th:action="@{/banking}" method="post">
+    <h2>Chuyển khoản</h2>
 
-    <p>
-        Người gửi:
-        <input type="text" name="From_account_id" placeholder="ACC001" required>
-    </p>
+    <form th:action="@{/banking}" method="post">
 
-    <p>
-        Người nhận:
-        <input type="text" name="To_account_id" placeholder="ACC002" required>
-    </p>
+        <p>
+            Người gửi:
+            <input type="text" name="From_account_id" placeholder="ACC001" required>
+        </p>
 
-    <p>
-        Số tiền:
-        <input type="number" name="amount" step="0.01" required>
-    </p>
-    <p>
-        Ghi chu:
-        <input type="text" name="description" placeholder="Nhap noi dung" required>
-    </p>
+        <p>
+            Người nhận:
+            <input type="text" id="toAccount" name="To_account_id" placeholder="ACC002" required>
 
-    <button type="submit">Chuyển tiền</button>
-</form>
+            <button type="button" class="btn-qr" onclick="openQR()">
+                Quét QR
+            </button>
+        </p>
 
-<!-- Hiển thị kết quả -->
-<div th:if="${message}">
-    <p th:text="${message}"></p>
+        <p>
+            Số tiền:
+            <input type="number" id="amount" name="amount" step="0.01" required>
+        </p>
+
+        <p>
+            Ghi chú:
+            <input type="text" id="description" name="description" placeholder="Nhập nội dung" required>
+        </p>
+
+        <button type="submit" class="btn-transfer">
+            Chuyển tiền
+        </button>
+
+    </form>
+
+    <div id="reader"></div>
+
+    <div class="message" th:if="${message}">
+        <p th:text="${message}"></p>
+    </div>
+
 </div>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+
+    function openQR(){
+
+        document.getElementById("reader").style.display = "block";
+
+        const scanner = new Html5QrcodeScanner(
+            "reader",
+            {
+                fps:10,
+                qrbox:250
+            }
+        );
+
+        scanner.render(function(decodedText){
+
+            // QR format:
+            // ACC002|50000|Thanh toan
+
+            let data = decodedText.split("|");
+
+            document.getElementById("toAccount").value = data[0];
+
+            if(data.length > 1){
+                document.getElementById("amount").value = data[1];
+            }
+
+            if(data.length > 2){
+                document.getElementById("description").value = data[2];
+            }
+
+            scanner.clear();
+            document.getElementById("reader").style.display = "none";
+
+        });
+    }
+
+</script>
 
 </body>
 </html>
