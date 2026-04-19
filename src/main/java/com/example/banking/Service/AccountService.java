@@ -1,15 +1,18 @@
 package com.example.banking.Service;
 
+import com.example.banking.DTO.LoginDTO;
 import com.example.banking.DTO.TransectionDTO;
 import com.example.banking.Entity.AccountClass;
 import com.example.banking.Repository.AccountRepository;
 import com.example.banking.Repository.TransactionRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.example.banking.Entity.TransactionsClass;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class AccountService {
@@ -19,6 +22,9 @@ public class AccountService {
 
     @Autowired
     TransactionRepository trainrepo;
+
+
+
         @Transactional
 
         public void transferMoney( TransectionDTO request) {
@@ -49,7 +55,6 @@ public class AccountService {
             log.setDate(LocalDateTime.now());
             log.setDescription(request.getDescription());
             log.setStatus("SUCCESS");
-
             trainrepo.save(log);
         }
     }

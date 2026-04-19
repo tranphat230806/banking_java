@@ -69,7 +69,11 @@
 			<artifactId>opencv</artifactId>
 			<version>4.9.0-0</version>
 		</dependency>
-
+		<!--Spring boot security -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
 		<!-- ZXing Core -->
 		<dependency>
 			<groupId>com.google.zxing</groupId>

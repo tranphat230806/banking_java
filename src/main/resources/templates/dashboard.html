@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial, Helvetica, sans-serif;
+        }
+
+        body{
+            background:linear-gradient(135deg,#0f172a,#1e293b,#334155);
+            min-height:100vh;
+            color:white;
+        }
+
+        /* Sidebar */
+        .sidebar{
+            position:fixed;
+            left:0;
+            top:0;
+            width:250px;
+            height:100%;
+            background:rgba(255,255,255,0.08);
+            backdrop-filter:blur(15px);
+            padding:30px 20px;
+            box-shadow:4px 0 20px rgba(0,0,0,0.2);
+        }
+
+        .logo{
+            font-size:28px;
+            font-weight:bold;
+            margin-bottom:40px;
+            color:#38bdf8;
+        }
+
+        .menu a{
+            display:block;
+            color:white;
+            text-decoration:none;
+            padding:14px 18px;
+            margin-bottom:12px;
+            border-radius:12px;
+            transition:0.3s;
+        }
+
+        .menu a:hover{
+            background:#38bdf8;
+            transform:translateX(5px);
+        }
+
+        /* Main */
+        .main{
+            margin-left:250px;
+            padding:30px;
+        }
+
+        /* Top bar */
+        .topbar{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:30px;
+        }
+
+        .welcome h2{
+            font-size:28px;
+        }
+
+        .welcome p{
+            color:#cbd5e1;
+        }
+
+        .user-box{
+            background:rgba(255,255,255,0.08);
+            padding:12px 18px;
+            border-radius:15px;
+        }
+
+        /* Cards */
+        .cards{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+            gap:20px;
+            margin-bottom:30px;
+        }
+
+        .card{
+            background:rgba(255,255,255,0.08);
+            padding:25px;
+            border-radius:20px;
+            backdrop-filter:blur(10px);
+            transition:0.3s;
+        }
+
+        .card:hover{
+            transform:translateY(-6px);
+        }
+
+        .card h3{
+            color:#cbd5e1;
+            margin-bottom:12px;
+        }
+
+        .card .value{
+            font-size:30px;
+            font-weight:bold;
+        }
+
+        /* Action buttons */
+        .actions{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+            gap:20px;
+            margin-bottom:30px;
+        }
+
+        .action-btn{
+            padding:18px;
+            border:none;
+            border-radius:18px;
+            font-size:16px;
+            font-weight:bold;
+            cursor:pointer;
+            transition:0.3s;
+        }
+
+        .transfer{background:#22c55e;color:white;}
+        .deposit{background:#3b82f6;color:white;}
+        .withdraw{background:#ef4444;color:white;}
+        .qr{background:#a855f7;color:white;}
+
+        .action-btn:hover{
+            transform:scale(1.05);
+        }
+
+        /* Transactions */
+        .table-box{
+            background:rgba(255,255,255,0.08);
+            border-radius:20px;
+            padding:25px;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            margin-top:15px;
+        }
+
+        th,td{
+            padding:14px;
+            text-align:left;
+        }
+
+        th{
+            color:#94a3b8;
+        }
+
+        tr{
+            border-bottom:1px solid rgba(255,255,255,0.08);
+        }
+
+        .success{
+            color:#22c55e;
+        }
+
+        .pending{
+            color:#facc15;
+        }
+
+        .failed{
+            color:#ef4444;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="logo">💳 Evo Bank</div>
+
+    <div class="menu">
+        <a href="#">🏠 Dashboard</a>
+        <a href="#">💸 Chuyển khoản</a>
+        <a href="#">📜 Lịch sử GD</a>
+        <a href="#">📱 QR Payment</a>
+        <a href="#">👤 Hồ sơ</a>
+        <a href="/logout">🚪 Logout</a>
+    </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+    <div class="topbar">
+        <div class="welcome">
+            <h2>Xin chào, <span th:text="${session.user.name}">Phát</span></h2>
+            <p>Chúc bạn một ngày giao dịch thuận lợi</p>
+        </div>
+
+        <div class="user-box">
+            ID: <span th:text="${session.user.id}">1</span>
+        </div>
+    </div>
+
+    <!-- Cards -->
+    <div class="cards">
+        <div class="card">
+            <h3>Số dư hiện tại</h3>
+            <div class="value">$ <span th:text="${session.user.balance}">1000</span></div>
+        </div>
+
+        <div class="card">
+            <h3>Tổng giao dịch tháng</h3>
+            <div class="value">$ 5,200</div>
+        </div>
+
+        <div class="card">
+            <h3>Điểm thưởng</h3>
+            <div class="value">1,250</div>
+        </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="actions">
+        <button class="action-btn transfer">💸 Chuyển khoản</button>
+        <button class="action-btn deposit">💰 Nạp tiền</button>
+        <button class="action-btn withdraw">🏧 Rút tiền</button>
+        <button class="action-btn qr">📱 QR Pay</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-box">
+        <h2>Lịch sử giao dịch gần đây</h2>
+
+        <table>
+            <tr>
+                <th>Ngày</th>
+                <th>Mô tả</th>
+                <th>Số tiền</th>
+                <th>Trạng thái</th>
+            </tr>
+
+            <tr>
+                <td>19/04/2026</td>
+                <td>Chuyển Bob</td>
+                <td>-$100</td>
+                <td class="success">SUCCESS</td>
+            </tr>
+
+            <tr>
+                <td>18/04/2026</td>
+                <td>Nạp tiền</td>
+                <td>+$500</td>
+                <td class="success">SUCCESS</td>
+            </tr>
+
+            <tr>
+                <td>17/04/2026</td>
+                <td>Rút ATM</td>
+                <td>-$50</td>
+                <td class="pending">PENDING</td>
+            </tr>
+        </table>
+    </div>
+
+</div>
+
+</body>
+</html>

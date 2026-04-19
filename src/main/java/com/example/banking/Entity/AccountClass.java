@@ -11,10 +11,20 @@ public class AccountClass {
     @Id
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Integer id;
+    private String password;
     private String code;
     private String name;
     private BigDecimal balance;
     private String currency;
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     @Version
     private long version;
 
