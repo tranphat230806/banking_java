@@ -30,7 +30,8 @@ public class TransectionController {
     private PasswordEncoder passwordEncoder;
 
     @GetMapping("/banking")
-    public String showForm() {
+    public String showForm(Model model, @AuthenticationPrincipal CustomUserDetails user) {
+        model.addAttribute("nameUser", user.getUsername());
         return "fromCK";
     }
 
@@ -40,7 +41,7 @@ public class TransectionController {
             ser.transferMoney(request, user);
             model.addAttribute("message", "Chuyển Khoản Thành Công");
         } catch (Exception e) {
-            model.addAttribute("message", "Bạn không đủ tiền");
+            model.addAttribute("message", e.getMessage());
         }
         return "fromCK";
     }

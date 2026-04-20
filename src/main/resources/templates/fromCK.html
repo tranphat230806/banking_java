@@ -6,154 +6,154 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <style>
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-            font-family:'Segoe UI',sans-serif;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
         }
 
-        body{
-            min-height:100vh;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            background:linear-gradient(135deg,#0f172a,#1e3a8a,#2563eb);
-            padding:30px;
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #0f172a, #1e3a8a, #2563eb);
+            padding: 30px;
         }
 
-        .card{
-            width:100%;
-            max-width:460px;
-            background:rgba(255,255,255,0.12);
-            backdrop-filter:blur(18px);
-            border:1px solid rgba(255,255,255,0.2);
-            border-radius:22px;
-            padding:32px;
-            box-shadow:0 15px 35px rgba(0,0,0,0.25);
-            color:white;
-            animation:fadeIn 0.7s ease;
+        .card {
+            width: 100%;
+            max-width: 460px;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 22px;
+            padding: 32px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            color: white;
+            animation: fadeIn 0.7s ease;
         }
 
-        @keyframes fadeIn{
-            from{
-                opacity:0;
-                transform:translateY(20px);
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
             }
-            to{
-                opacity:1;
-                transform:translateY(0);
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
 
-        .top{
-            text-align:center;
-            margin-bottom:28px;
+        .top {
+            text-align: center;
+            margin-bottom: 28px;
         }
 
-        .top h2{
-            font-size:28px;
-            margin-bottom:8px;
+        .top h2 {
+            font-size: 28px;
+            margin-bottom: 8px;
         }
 
-        .top p{
-            color:#dbeafe;
-            font-size:14px;
+        .top p {
+            color: #dbeafe;
+            font-size: 14px;
         }
 
-        .group{
-            margin-bottom:18px;
+        .group {
+            margin-bottom: 18px;
         }
 
-        label{
-            display:block;
-            margin-bottom:8px;
-            font-size:14px;
-            font-weight:600;
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
         }
 
-        input{
-            width:100%;
-            padding:14px;
-            border:none;
-            outline:none;
-            border-radius:12px;
-            background:rgba(255,255,255,0.15);
-            color:white;
-            font-size:15px;
+        input {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            outline: none;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 15px;
         }
 
-        input::placeholder{
-            color:#dbeafe;
+        input::placeholder {
+            color: #dbeafe;
         }
 
-        .row{
-            display:flex;
-            gap:10px;
+        .row {
+            display: flex;
+            gap: 10px;
         }
 
-        .row input{
-            flex:1;
+        .row input {
+            flex: 1;
         }
 
-        button{
-            border:none;
-            cursor:pointer;
-            transition:0.3s;
+        button {
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
         }
 
-        .btn-qr{
-            width:120px;
-            border-radius:12px;
-            background:#10b981;
-            color:white;
-            font-weight:600;
+        .btn-qr {
+            width: 120px;
+            border-radius: 12px;
+            background: #10b981;
+            color: white;
+            font-weight: 600;
         }
 
-        .btn-qr:hover{
-            background:#059669;
-            transform:scale(1.03);
+        .btn-qr:hover {
+            background: #059669;
+            transform: scale(1.03);
         }
 
-        .btn-transfer{
-            width:100%;
-            padding:15px;
-            margin-top:10px;
-            border-radius:14px;
-            font-size:16px;
-            font-weight:bold;
-            color:white;
-            background:linear-gradient(90deg,#06b6d4,#2563eb);
+        .btn-transfer {
+            width: 100%;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(90deg, #06b6d4, #2563eb);
         }
 
-        .btn-transfer:hover{
-            transform:translateY(-2px);
-            box-shadow:0 10px 20px rgba(37,99,235,0.4);
+        .btn-transfer:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.4);
         }
 
-        #reader{
-            margin-top:18px;
-            display:none;
-            border-radius:18px;
-            overflow:hidden;
+        #reader {
+            margin-top: 18px;
+            display: none;
+            border-radius: 18px;
+            overflow: hidden;
         }
 
-        .message{
-            margin-top:18px;
-            padding:14px;
-            border-radius:12px;
-            background:rgba(16,185,129,0.2);
-            border:1px solid #10b981;
-            color:#d1fae5;
-            text-align:center;
-            font-weight:600;
+        .message {
+            margin-top: 18px;
+            padding: 14px;
+            border-radius: 12px;
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            color: #d1fae5;
+            text-align: center;
+            font-weight: 600;
         }
 
-        .footer{
-            text-align:center;
-            margin-top:20px;
-            color:#cbd5e1;
-            font-size:13px;
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #cbd5e1;
+            font-size: 13px;
         }
     </style>
 </head>
@@ -170,8 +170,8 @@
     <form th:action="@{/banking}" method="post">
 
         <div class="group">
-            <label>Người gửi</label>
-            <input type="text" name="From_account_id" placeholder="ACC001" required>
+            <label>Chủ Tài Khoản</label>
+            <b th:text="${nameUser}"></b>
         </div>
 
         <div class="group">
@@ -231,19 +231,19 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <script>
-    function openQR(){
+    function openQR() {
 
         document.getElementById("reader").style.display = "block";
 
         const scanner = new Html5QrcodeScanner(
             "reader",
             {
-                fps:10,
-                qrbox:250
+                fps: 10,
+                qrbox: 250
             }
         );
 
-        scanner.render(function(decodedText){
+        scanner.render(function (decodedText) {
 
             // QR format:
             // ACC002|50000|Thanh toan
@@ -252,11 +252,11 @@
 
             document.getElementById("toAccount").value = data[0];
 
-            if(data.length > 1){
+            if (data.length > 1) {
                 document.getElementById("amount").value = data[1];
             }
 
-            if(data.length > 2){
+            if (data.length > 2) {
                 document.getElementById("description").value = data[2];
             }
             scanner.clear();

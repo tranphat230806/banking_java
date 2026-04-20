@@ -31,9 +31,12 @@ public class AccountService {
         String tmp = user.getAccountNumber();
 
         // 1. Tìm tài khoản (JPA sẽ tự động ánh xạ cột version vào @Version)
-        AccountClass fromAcc = accrepo.findByCode(request.getFrom_account_id()).orElseThrow(() -> new RuntimeException("không tìm thấy mã code"));
+        AccountClass fromAcc = accrepo.findByCode(tmp).orElseThrow(() -> new RuntimeException("không tìm thấy mã code"));
         AccountClass toAcc = accrepo.findByCode(request.getTo_account_id()).orElseThrow(() -> new RuntimeException("không tìm thấy mã code"));
-
+        // *** chặn ko cho chuyển chính account hiện tại
+        if (user.getAccountNumber().equalsIgnoreCase(toAcc.getCode())) {
+            throw new RuntimeException("Lỗi không thể chuyển cho chính tài khoản của bạn!!");
+        }
         // 2. Kiểm tra nghiệp vụ
         if (fromAcc.getBalance().compareTo(request.getAmount()) < 0) {
             throw new RuntimeException("Không đủ tiền");
