@@ -4,14 +4,18 @@ import com.example.banking.DTO.RegisterDTO;
 import com.example.banking.DTO.TransectionDTO;
 import com.example.banking.Entity.AccountClass;
 import com.example.banking.Repository.AccountRepository;
+import com.example.banking.Security.CustomUserDetails;
 import com.example.banking.Service.AccountService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.AuthenticatedPrincipal;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import javax.naming.AuthenticationException;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,45 +30,42 @@ public class TransectionController {
     private PasswordEncoder passwordEncoder;
 
     @GetMapping("/banking")
-    public String showForm()
-    {
+    public String showForm() {
         return "fromCK";
     }
+
     @PostMapping("/banking")
-    public String Transetion_in_banking( @ModelAttribute TransectionDTO request, Model model)
-    {
+    public String Transetion_in_banking(@ModelAttribute TransectionDTO request, @AuthenticationPrincipal CustomUserDetails user, Model model) {
         try {
-        ser.transferMoney(request);
-        model.addAttribute("message", "Chuyển Khoản Thành Công");
-        }
-        catch(Exception e){
-            model.addAttribute("message","Bạn không đủ tiền");
+            ser.transferMoney(request, user);
+            model.addAttribute("message", "Chuyển Khoản Thành Công");
+        } catch (Exception e) {
+            model.addAttribute("message", "Bạn không đủ tiền");
         }
         return "fromCK";
     }
+
     @GetMapping("/create")
-    public String fromCreate(Model model)
-    {
+    public String fromCreate(Model model) {
         model.addAttribute("dto", new RegisterDTO());
         return "formCreate";
     }
+
     @PostMapping("/create")
-    public String Register_in_bank(@ModelAttribute RegisterDTO dto,Model model)
-    {
-        if(accountRepository.findByCode(dto.getCode()).isPresent())
-        {
-            model.addAttribute("error","Code đã tồn tại!!!!");
+    public String Register_in_bank(@ModelAttribute RegisterDTO dto, Model model) {
+        if (accountRepository.findByCode(dto.getCode()).isPresent()) {
+            model.addAttribute("error", "Code đã tồn tại!!!!");
             return "formCreate";
         }
 
-        AccountClass acc= new AccountClass();
+        AccountClass acc = new AccountClass();
         acc.setCode(dto.getCode());
         acc.setPassword(passwordEncoder.encode(dto.getPassword()));
         acc.setName(dto.getName());
         acc.setBalance(new BigDecimal(dto.getBalance()));
         acc.setCurrency(dto.getCurrency());
         accountRepository.save(acc);
-        model.addAttribute("success","Bạn đã đăng kí thành công!!!");
+        model.addAttribute("success", "Bạn đã đăng kí thành công!!!");
         return "redirect:/login";
     }
 
@@ -73,28 +74,27 @@ public class TransectionController {
     // ===============================
     @PostMapping("/scanQR")
     @ResponseBody
-    public Map<String,String> scanQR( @RequestBody Map<String,String> body) {
+    public Map<String, String> scanQR(@RequestBody Map<String, String> body) {
         String qr = body.get("qr");
-        Map<String,String> result = new HashMap<>();
+        Map<String, String> result = new HashMap<>();
         try {
             // QR mẫu:
             // ACC002|50|Thanh toan
             String[] data = qr.split("\\|");
             result.put("toAccount", data[0]);
-            if(data.length > 1)
+            if (data.length > 1)
                 result.put("amount", data[1]);
             else
                 result.put("amount", "");
 
-            if(data.length > 2)
+            if (data.length > 2)
                 result.put("description", data[2]);
             else
                 result.put("description", "");
 
             result.put("status", "success");
 
-        }
-        catch (Exception e){
+        } catch (Exception e) {
 
             result.put("status", "error");
             result.put("message", "QR không hợp lệ");
