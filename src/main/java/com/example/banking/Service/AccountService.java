@@ -1,9 +1,12 @@
 package com.example.banking.Service;
 
+import com.example.banking.DTO.BillDTO;
 import com.example.banking.DTO.LoginDTO;
 import com.example.banking.DTO.TransectionDTO;
 import com.example.banking.Entity.AccountClass;
+import com.example.banking.Entity.BillClass;
 import com.example.banking.Repository.AccountRepository;
+import com.example.banking.Repository.BillRepository;
 import com.example.banking.Repository.TransactionRepository;
 import com.example.banking.Security.CustomUserDetails;
 import jakarta.transaction.Transactional;
@@ -24,10 +27,12 @@ public class AccountService {
     @Autowired
     TransactionRepository trainrepo;
 
+    @Autowired
+    BillRepository billrepo;
 
     @Transactional
 
-    public void transferMoney(TransectionDTO request, CustomUserDetails user) {
+    public void transferMoney(TransectionDTO request, CustomUserDetails user, BillDTO billDTO) {
         String tmp = user.getAccountNumber();
 
         // 1. Tìm tài khoản (JPA sẽ tự động ánh xạ cột version vào @Version)
@@ -60,5 +65,14 @@ public class AccountService {
         log.setDescription(request.getDescription());
         log.setStatus("SUCCESS");
         trainrepo.save(log);
+
+        //6. Lưu và show bill
+        BillClass bill = new BillClass();
+        bill.setAccountClass(fromAcc);
+        bill.setTransaction_id(log);
+        bill.setAmount(request.getAmount());
+        bill.setBill_date(LocalDateTime.now());
+        bill.setDescription(billDTO.getDescription());
+        billrepo.save(bill);
     }
 }

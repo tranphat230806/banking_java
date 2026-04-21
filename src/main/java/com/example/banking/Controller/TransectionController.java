@@ -1,5 +1,6 @@
 package com.example.banking.Controller;
 
+import com.example.banking.DTO.BillDTO;
 import com.example.banking.DTO.RegisterDTO;
 import com.example.banking.DTO.TransectionDTO;
 import com.example.banking.Entity.AccountClass;
@@ -36,9 +37,9 @@ public class TransectionController {
     }
 
     @PostMapping("/banking")
-    public String Transetion_in_banking(@ModelAttribute TransectionDTO request, @AuthenticationPrincipal CustomUserDetails user, Model model) {
+    public String Transetion_in_banking(@ModelAttribute TransectionDTO request, @AuthenticationPrincipal CustomUserDetails user, BillDTO billdto, Model model) {
         try {
-            ser.transferMoney(request, user);
+            ser.transferMoney(request, user, billdto);
             model.addAttribute("message", "Chuyển Khoản Thành Công");
         } catch (Exception e) {
             model.addAttribute("message", e.getMessage());
