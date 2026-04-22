@@ -1,0 +1,148 @@
+<!-- templates/bill.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hóa đơn giao dịch</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .bill-box {
+            width: 600px;
+            margin: auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .title {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+
+        .success {
+            text-align: center;
+            color: green;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .value {
+            color: #111;
+        }
+
+        .money {
+            color: #e74c3c;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="bill-box">
+
+    <h2 class="title">HÓA ĐƠN CHUYỂN KHOẢN</h2>
+
+    <div class="success">Giao dịch thành công</div>
+
+    <div class="row">
+        <span class="label">Mã Bill:</span>
+        <span class="value" th:text="${bill.id}"></span>
+    </div>
+
+    <div class="row">
+        <span class="label">Người gửi:</span>
+        <span class="value"
+              th:text="${bill.accountClass.name}"></span>
+    </div>
+
+    <div class="row">
+        <span class="label">Số tài khoản gửi:</span>
+        <span class="value"
+              th:text="${bill.accountClass.code}"></span>
+    </div>
+
+    <div class="row">
+        <span class="label">Người nhận:</span>
+        <span class="value"
+              th:text="${bill.transaction_id.to_account_id.name}"></span>
+    </div>
+
+    <div class="row">
+        <span class="label">Số tài khoản nhận:</span>
+        <span class="value"
+              th:text="${bill.transaction_id.to_account_id.code}"></span>
+    </div>
+
+    <div class="row">
+        <span class="label">Số tiền:</span>
+        <span class="money"
+              th:text="${bill.amount} + ' VNĐ'"></span>
+    </div>
+
+    <div class="row">
+        <span class="label">Nội dung:</span>
+        <span class="value"
+              th:text="${bill.description}"></span>
+    </div>
+
+    <div class="row">
+        <span class="label">Ngày giao dịch:</span>
+        <span class="value"
+              th:text="${bill.bill_date}"></span>
+    </div>
+
+    <div class="row">
+        <span class="label">Trạng thái:</span>
+        <span class="value"
+              th:text="${bill.transaction_id.status}"></span>
+    </div>
+
+    <div class="footer">
+        <a href="/dashboard" class="btn">Về trang chủ</a>
+    </div>
+
+</div>
+
+</body>
+</html>

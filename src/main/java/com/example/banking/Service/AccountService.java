@@ -32,7 +32,7 @@ public class AccountService {
 
     @Transactional
 
-    public void transferMoney(TransectionDTO request, CustomUserDetails user, BillDTO billDTO) {
+    public BillClass transferMoney(TransectionDTO request, CustomUserDetails user, BillDTO billDTO) {
         String tmp = user.getAccountNumber();
 
         // 1. Tìm tài khoản (JPA sẽ tự động ánh xạ cột version vào @Version)
@@ -58,8 +58,8 @@ public class AccountService {
 
         // 5. Ghi log giao dịch
         TransactionsClass log = new TransactionsClass();
-        log.setFrom_account_id(fromAcc);
-        log.setTo_account_id(toAcc);
+        log.setFromAccount(fromAcc);
+        log.setToAccount(toAcc);
         log.setAmount(request.getAmount());
         log.setDate(LocalDateTime.now());
         log.setDescription(request.getDescription());
@@ -74,5 +74,7 @@ public class AccountService {
         bill.setBill_date(LocalDateTime.now());
         bill.setDescription(billDTO.getDescription());
         billrepo.save(bill);
+
+        return bill;
     }
 }

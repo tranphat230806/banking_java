@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table (name = "transactions")
+@Table(name = "transactions")
 public class TransactionsClass {
     public Integer getId() {
         return id;
@@ -16,20 +16,20 @@ public class TransactionsClass {
         this.id = id;
     }
 
-    public AccountClass getFrom_account_id() {
-        return from_account_id;
+    public AccountClass getFromAccount() {
+        return fromAccount;
     }
 
-    public void setFrom_account_id(AccountClass from_account_id) {
-        this.from_account_id = from_account_id;
+    public void setFromAccount(AccountClass fromAccount) {
+        this.fromAccount = fromAccount;
     }
 
-    public AccountClass getTo_account_id() {
-        return to_account_id;
+    public AccountClass getToAccount() {
+        return toAccount;
     }
 
-    public void setTo_account_id(AccountClass to_account_id) {
-        this.to_account_id = to_account_id;
+    public void setToAccount(AccountClass toAccount) {
+        this.toAccount = toAccount;
     }
 
     public BigDecimal getAmount() {
@@ -73,18 +73,20 @@ public class TransactionsClass {
     }
 
     @Id
-    @GeneratedValue (strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     @ManyToOne
     @JoinColumn(name = "from_account_id")
-    private AccountClass from_account_id;
+    private AccountClass fromAccount;
     @ManyToOne
     @JoinColumn(name = "to_account_id")
-    private AccountClass to_account_id;
+    private AccountClass toAccount;
     private BigDecimal amount;
     private String type;
     private LocalDateTime date;
-    private  String description;
-    private  String status;
-    public TransactionsClass(){}
+    private String description;
+    private String status;
+
+    public TransactionsClass() {
+    }
 }

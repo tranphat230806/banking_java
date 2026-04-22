@@ -1,7 +1,11 @@
 package com.example.banking.Repository;
 
+import com.example.banking.Entity.AccountClass;
 import com.example.banking.Entity.TransactionsClass;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface TransactionRepository extends JpaRepository <TransactionsClass, Integer>{
+import java.util.List;
+
+public interface TransactionRepository extends JpaRepository<TransactionsClass, Integer> {
+    List<TransactionsClass> findTop5ByFromAccountOrderByDateDesc(AccountClass acc);
 }

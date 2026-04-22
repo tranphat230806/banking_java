@@ -15,24 +15,26 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 public class PasswordConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception
-    {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login","/create", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/login", "/create", "/css/**", "/js/**").permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(form -> form
                         .loginPage("/login")// nếu chưa có login page thì tạm bỏ dòng này
                         .loginProcessingUrl("/login")
                         .usernameParameter("code")
                         .passwordParameter("password")
-                        .defaultSuccessUrl("/banking", true)
+                        .defaultSuccessUrl("/dashboard", true)
                         .permitAll()
                 )
                 .logout(logout -> logout
-                        .logoutSuccessUrl("/login"));
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                );
 
         return http.build();
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
