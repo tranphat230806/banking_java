@@ -165,13 +165,72 @@
         .failed {
             color: #ef4444;
         }
+
+        /* modal nền */
+        #qrBox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        /* khi JS set block → center bằng flex */
+        #qrBox[style*="block"] {
+            display: flex !important;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* box chính */
+        .modal-content {
+            position: relative;
+            background: #ffffff;
+            color: #222; /* 🔥 FIX: chữ rõ */
+
+            padding: 24px;
+            border-radius: 16px;
+            width: 280px;
+
+            text-align: center;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        /* tiêu đề */
+        .modal-content h3 {
+            margin: 0;
+            color: #111; /* 🔥 FIX */
+        }
+
+        /* mô tả */
+        .modal-content p {
+            color: #555; /* 🔥 FIX */
+            font-size: 14px;
+        }
+
+        /* QR */
+        #qrImg {
+            width: 180px;
+            margin: 15px 0;
+        }
+
+        /* nút đóng */
+        .close-btn {
+            position: absolute;
+            right: 12px;
+            top: 10px;
+            font-size: 20px;
+            color: #333; /* 🔥 FIX */
+            cursor: pointer;
+        }
     </style>
 </head>
 
 <body>
 
 <div class="sidebar">
-    <div class="logo">💳 Evo Bank</div>
+    <div class="logo">💳 TranPhatBank</div>
 
     <div class="menu">
         <a th:href="@{/home}">🏠 Dashboard</a>
@@ -237,7 +296,21 @@
 
         <button class="action-btn withdraw">🏧 Rút tiền</button>
 
-        <button class="action-btn qr">📱 QR Pay</button>
+        <button class="action-btn qr" onclick="showMyQR()">
+            📱 My QR
+        </button>
+
+        <div id="qrBox" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeQR()">&times;</span>
+
+                <h3>QR của bạn</h3>
+
+                <img id="qrImg" alt="QR Code">
+
+                <p>Quét để thanh toán</p>
+            </div>
+        </div>
     </div>
 
     <!-- History -->
@@ -261,8 +334,28 @@
 
         </table>
     </div>
+    <script>
+        function showMyQR() {
+
+            fetch('/myQR')
+                .then(res => res.blob())
+                .then(blob => {
+
+                    document.getElementById("qrImg").src =
+                        URL.createObjectURL(blob);
+
+                    document.getElementById("qrBox").style.display = "block";
+                });
+        }
+
+        function closeQR() {
+            document.getElementById("qrBox").style.display = "none";
+        }
+    </script>
 
 </div>
 
 </body>
 </html>
+
+<!--// check my QR-->

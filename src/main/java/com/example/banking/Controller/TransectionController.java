@@ -10,13 +10,19 @@ import com.example.banking.Repository.BillRepository;
 import com.example.banking.Repository.TransactionRepository;
 import com.example.banking.Security.CustomUserDetails;
 import com.example.banking.Service.AccountService;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,8 +59,9 @@ public class TransectionController {
     }
 
     @GetMapping("/banking")
-    public String showForm(Model model, @AuthenticationPrincipal CustomUserDetails user) {
+    public String showForm(Model model, @AuthenticationPrincipal CustomUserDetails user, @ModelAttribute TransectionDTO tmp) {
         model.addAttribute("nameUser", user.getUsername());
+
         return "fromCK";
     }
 
@@ -114,20 +121,12 @@ public class TransectionController {
         String qr = body.get("qr");
         Map<String, String> result = new HashMap<>();
         try {
-            // QR mẫu:
-            // ACC002|50|Thanh toan
+            // QR mẫu: ACC002|Nguyen Van A
             String[] data = qr.split("\\|");
-            result.put("toAccount", data[0]);
-            if (data.length > 1)
-                result.put("amount", data[1]);
-            else
-                result.put("amount", "");
-
-            if (data.length > 2)
-                result.put("description", data[2]);
-            else
-                result.put("description", "");
-
+            result.put("toAccount", data.length > 0 ? data[0] : "");
+            result.put("accountName", data.length > 1 ? data[1] : "");
+            result.put("amount", data.length > 2 ? data[2] : "");
+            result.put("description", data.length > 3 ? data[3] : "");
             result.put("status", "success");
 
         } catch (Exception e) {
@@ -136,6 +135,42 @@ public class TransectionController {
             result.put("message", "QR không hợp lệ");
         }
         return result;
+    }
+
+    @GetMapping("/getUserByCode")
+    @ResponseBody
+    public String getUserByCode(@RequestParam String code) {
+        return accountRepository.findByCode(code).map(AccountClass::getName).orElse("Tài khoản này không tồn tại trong hệ thống");
+    }
+    // test spi findCode
+//    @GetMapping("/getUserByCode")
+//    @ResponseBody
+//    public String test() {
+//        return "OK";
+//    }
+
+    // create myQR
+    @GetMapping(value = "/myQR", produces = MediaType.IMAGE_PNG_VALUE)
+    @ResponseBody
+    public byte[] myQR(@AuthenticationPrincipal CustomUserDetails user) throws Exception {
+
+        String data = user.getAccountNumber()
+                + "|" + user.getUsername();
+
+        QRCodeWriter writer = new QRCodeWriter();
+
+        BitMatrix matrix =
+                writer.encode(data,
+                        BarcodeFormat.QR_CODE,
+                        300, 300);
+
+        ByteArrayOutputStream out =
+                new ByteArrayOutputStream();
+
+        MatrixToImageWriter.writeToStream(
+                matrix, "PNG", out);
+
+        return out.toByteArray();
     }
 
 }

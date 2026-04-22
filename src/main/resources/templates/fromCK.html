@@ -190,6 +190,10 @@
                 </button>
             </div>
         </div>
+        <div class="group">
+            <label>Tên Tài Khoản</label>
+            <p id="toName"></p>
+        </div>
 
         <div class="group">
             <label>Số tiền</label>
@@ -229,7 +233,18 @@
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
+
 <script>
+    function loadUserName() {
+        let code = document.getElementById("toAccount").value;
+
+        fetch("/getUserByCode?code=" + code)
+            .then(res => res.text())
+            .then(name => {
+                document.getElementById("toName").innerText = name;
+            });
+    }
+
     function openQR() {
 
         document.getElementById("reader").style.display = "block";
@@ -258,10 +273,14 @@
             if (data.length > 2) {
                 document.getElementById("description").value = data[2];
             }
+            loadUserName();
             scanner.clear();
             document.getElementById("reader").style.display = "none";
         });
     }
+
+    document.getElementById("toAccount").addEventListener("blur", loadUserName);
 </script>
+
 </body>
 </html>

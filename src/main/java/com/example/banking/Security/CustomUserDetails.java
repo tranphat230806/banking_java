@@ -7,20 +7,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.*;
 
-public class CustomUserDetails implements UserDetails {
-
-    private AccountClass account;
-
-    public CustomUserDetails(AccountClass account) {
-        this.account = account;
-    }
+public record CustomUserDetails(AccountClass account) implements UserDetails {
 
     public String getAccountNumber() {
         return account.getCode();
-    }
-
-    public AccountClass getAccount() {
-        return account;
     }
 
     @Override
@@ -35,7 +25,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return account.getCode();
+        return account.getName();
     }
 
     @Override
