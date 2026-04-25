@@ -40,6 +40,13 @@ public class TransectionController {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    // Login
+    @GetMapping("/login")
+    public String login() {
+        return "login";
+    }
+
+    //Dashboard
     @GetMapping("/dashboard")
     public String home(Model model,
                        @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -58,6 +65,7 @@ public class TransectionController {
         return "dashboard";
     }
 
+    //Transection
     @GetMapping("/banking")
     public String showForm(Model model, @AuthenticationPrincipal CustomUserDetails user, @ModelAttribute TransectionDTO tmp) {
         model.addAttribute("nameUser", user.getUsername());
@@ -76,6 +84,7 @@ public class TransectionController {
         return "fromCK";
     }
 
+    //Create
     @GetMapping("/create")
     public String fromCreate(Model model) {
         model.addAttribute("dto", new RegisterDTO());
@@ -100,6 +109,7 @@ public class TransectionController {
         return "redirect:/login";
     }
 
+    // Bill
     @GetMapping("/bill/{id}")
     public String showBill(@PathVariable Long id,
                            Model model) {
