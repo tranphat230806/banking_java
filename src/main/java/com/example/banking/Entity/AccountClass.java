@@ -9,31 +9,24 @@ import java.math.BigDecimal;
 @Table(name = "accounts")
 public class AccountClass {
     @Id
-    @GeneratedValue (strategy = GenerationType.IDENTITY)
-    private Integer id;
-    private String password;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+    private long user_id;
     private String code;
-    private String name;
     private BigDecimal balance;
     private String currency;
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
 
     @Version
     private long version;
 
-    public AccountClass(){}
-    public Integer getId() {
+    public AccountClass() {
+    }
+
+    public long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -45,15 +38,7 @@ public class AccountClass {
         this.code = code;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Column (name = "balance")
+    @Column(name = "balance")
     public BigDecimal getBalance() {
         return balance;
     }
