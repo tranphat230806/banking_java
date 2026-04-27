@@ -1,15 +1,19 @@
 package com.example.banking.DTO;
 
 public class RegisterDTO {
-    private String code;
+    private String username;
     private String password;
+    private String fullName;
+    private String email;
+    private String phone;
+    private String avatar;
 
-    public String getCode() {
-        return code;
+    public String getUsername() {
+        return username;
     }
 
-    public void setCode(String code) {
-        this.code = code;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getPassword() {
@@ -20,34 +24,38 @@ public class RegisterDTO {
         this.password = password;
     }
 
-    public String getName() {
-        return name;
+    public String getFullName() {
+        return fullName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
-    public String getBalance() {
-        return balance;
+    public String getEmail() {
+        return email;
     }
 
-    public void setBalance(String balance) {
-        this.balance = balance;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
-    private String name;
-    private String balance;
-
-    public String getCurrency() {
-        return currency;
+    public String getPhone() {
+        return phone;
     }
 
-    public void setCurrency(String currency) {
-        this.currency = currency;
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
-    private String currency;
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
     public RegisterDTO() {
     }
 }

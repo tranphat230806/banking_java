@@ -8,6 +8,7 @@ import com.example.banking.Entity.BillClass;
 import com.example.banking.Repository.AccountRepository;
 import com.example.banking.Repository.BillRepository;
 import com.example.banking.Repository.TransactionRepository;
+import com.example.banking.Repository.UserRepository;
 import com.example.banking.Security.CustomUserDetails;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.example.banking.Entity.TransactionsClass;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -30,16 +32,23 @@ public class AccountService {
     @Autowired
     BillRepository billrepo;
 
+    @Autowired
+    UserRepository userrepo;
+
     @Transactional
 
     public BillClass transferMoney(TransectionDTO request, CustomUserDetails user, BillDTO billDTO) {
-        String tmp = user.getAccountNumber();
+        String tmp = user.getUsername();
 
         // 1. Tìm tài khoản (JPA sẽ tự động ánh xạ cột version vào @Version)
-        AccountClass fromAcc = accrepo.findByCode(tmp).orElseThrow(() -> new RuntimeException("không tìm thấy mã code"));
-        AccountClass toAcc = accrepo.findByCode(request.getTo_account_id()).orElseThrow(() -> new RuntimeException("không tìm thấy mã code"));
+        AccountClass fromAcc = accrepo.findByCode(tmp).orElseThrow(() -> new RuntimeException("không tìm thấy người dùng này"));
+        AccountClass toAcc = accrepo.findByCode(request.getTo_account_id()).orElseThrow(() -> new RuntimeException("không tìm thấy người dùng"));
+        //Chuyển tiền phải lớn hơn 0
+        if (request.getAmount().compareTo(BigDecimal.valueOf(2)) <= 0)
+            throw new RuntimeException("Số tiền chuyển phải lớn hơn 2.000đ");
+
         // *** chặn ko cho chuyển chính account hiện tại
-        if (user.getAccountNumber().equalsIgnoreCase(toAcc.getCode())) {
+        if (user.getUsername().equalsIgnoreCase(toAcc.getCode())) {
             throw new RuntimeException("Lỗi không thể chuyển cho chính tài khoản của bạn!!");
         }
         // 2. Kiểm tra nghiệp vụ
@@ -60,8 +69,9 @@ public class AccountService {
         TransactionsClass log = new TransactionsClass();
         log.setFromAccount(fromAcc);
         log.setToAccount(toAcc);
+        log.setType("Transfer");
         log.setAmount(request.getAmount());
-        log.setDate(LocalDateTime.now());
+        log.setCreated(LocalDateTime.now());
         log.setDescription(request.getDescription());
         log.setStatus("SUCCESS");
         trainrepo.save(log);

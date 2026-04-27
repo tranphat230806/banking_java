@@ -254,7 +254,7 @@
         <div class="welcome">
             <h2>
                 Hi,
-                <span th:text="${user.name}">User</span>
+                <span th:text="${user.username}">User</span>
             </h2>
             <p>Chúc bạn một ngày giao dịch thuận lợi</p>
         </div>
@@ -270,7 +270,7 @@
         <div class="card">
             <h3>Số dư hiện tại</h3>
             <div class="value">
-                $ <span th:text="${user.balance}">1000</span>
+                $ <span th:text="${user.blance}">1000</span>
             </div>
         </div>
 
@@ -326,7 +326,7 @@
             </tr>
 
             <tr th:each="item : ${list}">
-                <td th:text="${item.date}">2026-04-22</td>
+                <td th:text="${item.created}">2026-04-22</td>
                 <td th:text="${item.description}">Chuyển khoản</td>
                 <td th:text="${item.amount}">500</td>
                 <td th:text="${item.status}" class="success">SUCCESS</td>

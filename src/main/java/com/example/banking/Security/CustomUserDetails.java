@@ -1,31 +1,34 @@
 package com.example.banking.Security;
 
 import com.example.banking.Entity.AccountClass;
+import com.example.banking.Entity.UserClass;
 import org.springframework.security.core.*;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.*;
 
-public record CustomUserDetails(AccountClass account) implements UserDetails {
+public class CustomUserDetails implements UserDetails {
 
-    public String getAccountNumber() {
-        return account.getCode();
+    private final UserClass user;
+
+    public CustomUserDetails(UserClass user) {
+        this.user = user;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        return List.of(new SimpleGrantedAuthority(user.getRole()));
     }
 
     @Override
     public String getPassword() {
-        return account.getPassword();
+        return user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return account.getName();
+        return user.getUsername(); //  login bằng username
     }
 
     @Override
@@ -35,7 +38,7 @@ public record CustomUserDetails(AccountClass account) implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return !"LOCKED".equals(user.getStatus());
     }
 
     @Override
@@ -45,7 +48,6 @@ public record CustomUserDetails(AccountClass account) implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return "ACTIVE".equals(user.getStatus());
     }
 }
-

@@ -11,13 +11,23 @@ public class AccountClass {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    private long user_id;
+
     private String code;
     private BigDecimal balance;
     private String currency;
-
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private UserClass user;
     @Version
     private long version;
+
+    public UserClass getUser() {
+        return user;
+    }
+
+    public void setUser(UserClass user) {
+        this.user = user;
+    }
 
     public AccountClass() {
     }

@@ -3,6 +3,7 @@ package com.example.banking.Entity;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -17,10 +18,29 @@ public class UserClass {
     private String email;
     private String phone;
     private String avatar;
-    private String role;
-    private String status;
+    private String role = "ROLE_USER";
+    private String status = "ACTIVE";
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    public List<AccountClass> getAccounts() {
+        return accounts;
+    }
+
+    public void setAccounts(List<AccountClass> accounts) {
+        this.accounts = accounts;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    @OneToMany(mappedBy = "user")
+    private List<AccountClass> accounts;
 
     public UserClass() {
     }
@@ -97,11 +117,4 @@ public class UserClass {
         this.status = status;
     }
 
-    public LocalDateTime getCreated_at() {
-        return created_at;
-    }
-
-    public void setCreated_at(LocalDateTime created_at) {
-        this.created_at = created_at;
-    }
 }

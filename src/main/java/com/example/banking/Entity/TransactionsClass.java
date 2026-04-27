@@ -8,16 +8,24 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "transactions")
 public class TransactionsClass {
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(long id) {
         this.id = id;
     }
 
     public AccountClass getFromAccount() {
         return fromAccount;
+    }
+
+    public LocalDateTime getCreated() {
+        return created;
+    }
+
+    public void setCreated(LocalDateTime created) {
+        this.created = created;
     }
 
     public void setFromAccount(AccountClass fromAccount) {
@@ -48,13 +56,6 @@ public class TransactionsClass {
         this.type = type;
     }
 
-    public LocalDateTime getDate() {
-        return date;
-    }
-
-    public void setDate(LocalDateTime date) {
-        this.date = date;
-    }
 
     public String getDescription() {
         return description;
@@ -74,7 +75,7 @@ public class TransactionsClass {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private long id;
     @ManyToOne
     @JoinColumn(name = "from_account_id")
     private AccountClass fromAccount;
@@ -83,7 +84,7 @@ public class TransactionsClass {
     private AccountClass toAccount;
     private BigDecimal amount;
     private String type;
-    private LocalDateTime date;
+    private LocalDateTime created;
     private String description;
     private String status;
 

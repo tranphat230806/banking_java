@@ -11,6 +11,20 @@ public class BillClass {
     public BillClass() {
     }
 
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+    @OneToOne
+    @JoinColumn(name = "transaction_id")
+    private TransactionsClass transaction_id;
+    @ManyToOne
+    @JoinColumn(name = "account_id")
+    private AccountClass accountClass;
+    private BigDecimal amount;
+    private String description;
+    private LocalDateTime bill_date;
+
     public long getId() {
         return id;
     }
@@ -58,17 +72,4 @@ public class BillClass {
     public void setBill_date(LocalDateTime bill_date) {
         this.bill_date = bill_date;
     }
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
-    @OneToOne
-    @JoinColumn(name = "transaction_id")
-    private TransactionsClass transaction_id;
-    @OneToOne
-    @JoinColumn(name = "account_id")
-    private AccountClass accountClass;
-    private BigDecimal amount;
-    private String description;
-    private LocalDateTime bill_date;
 }

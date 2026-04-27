@@ -5,9 +5,11 @@ import com.example.banking.DTO.RegisterDTO;
 import com.example.banking.DTO.TransectionDTO;
 import com.example.banking.Entity.AccountClass;
 import com.example.banking.Entity.BillClass;
+import com.example.banking.Entity.UserClass;
 import com.example.banking.Repository.AccountRepository;
 import com.example.banking.Repository.BillRepository;
 import com.example.banking.Repository.TransactionRepository;
+import com.example.banking.Repository.UserRepository;
 import com.example.banking.Security.CustomUserDetails;
 import com.example.banking.Service.AccountService;
 import com.google.zxing.BarcodeFormat;
@@ -40,6 +42,9 @@ public class TransectionController {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    @Autowired
+    private UserRepository userrepo;
+
     // Login
     @GetMapping("/login")
     public String login() {
@@ -51,16 +56,16 @@ public class TransectionController {
     public String home(Model model,
                        @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        String code = userDetails.getAccountNumber();
+        String name = userDetails.getUsername();
 
-        AccountClass user = accountRepository.findByCode(code)
+        UserClass user = userrepo.findByUsername(name)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
 
         model.addAttribute("user", user);
 
         // transaction history
         model.addAttribute("list",
-                transactionRepository.findTop5ByFromAccountOrderByDateDesc(user));
+                transactionRepository.findTop5ByFromAccountOrderByCreatedDesc(user));
 
         return "dashboard";
     }
@@ -93,18 +98,19 @@ public class TransectionController {
 
     @PostMapping("/create")
     public String Register_in_bank(@ModelAttribute RegisterDTO dto, Model model) {
-        if (accountRepository.findByCode(dto.getCode()).isPresent()) {
+        if (userrepo.findByUsername(dto.getUsername()).isPresent()) {
             model.addAttribute("error", "Code đã tồn tại!!!!");
             return "formCreate";
         }
 
-        AccountClass acc = new AccountClass();
-        acc.setCode(dto.getCode());
-        acc.setPassword(passwordEncoder.encode(dto.getPassword()));
-        acc.setName(dto.getName());
-        acc.setBalance(new BigDecimal(dto.getBalance()));
-        acc.setCurrency(dto.getCurrency());
-        accountRepository.save(acc);
+        UserClass user = new UserClass();
+        user.setUsername(dto.getUsername());
+        user.setPassword(dto.getPassword());
+        user.setFullName(dto.getFullName());
+        user.setEmail(dto.getEmail());
+        user.setPhone(dto.getPhone());
+        user.setAvatar(dto.getAvatar());
+        userrepo.save(user);
         model.addAttribute("success", "Bạn đã đăng kí thành công!!!");
         return "redirect:/login";
     }
@@ -114,7 +120,7 @@ public class TransectionController {
     public String showBill(@PathVariable Long id,
                            Model model) {
 
-        BillClass bill = billrepo.findById(id.intValue())
+        BillClass bill = billrepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bill"));
 
         model.addAttribute("bill", bill);
@@ -149,8 +155,8 @@ public class TransectionController {
 
     @GetMapping("/getUserByCode")
     @ResponseBody
-    public String getUserByCode(@RequestParam String code) {
-        return accountRepository.findByCode(code).map(AccountClass::getName).orElse("Tài khoản này không tồn tại trong hệ thống");
+    public String getUserByCode(@RequestParam String username) {
+        return userrepo.findByUsername(username).map(UserClass::getUsername).orElse("Tài khoản này không tồn tại trong hệ thống");
     }
     // test spi findCode
 //    @GetMapping("/getUserByCode")
@@ -164,7 +170,7 @@ public class TransectionController {
     @ResponseBody
     public byte[] myQR(@AuthenticationPrincipal CustomUserDetails user) throws Exception {
 
-        String data = user.getAccountNumber()
+        String data = user.getUsername()
                 + "|" + user.getUsername();
 
         QRCodeWriter writer = new QRCodeWriter();
