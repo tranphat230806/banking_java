@@ -171,7 +171,7 @@
 
         <div class="group">
             <label>Chủ Tài Khoản</label>
-            <b th:text="${nameUser}"></b>
+            <b th:text="${fullname}"></b>
         </div>
 
         <div class="group">
@@ -179,8 +179,8 @@
 
             <div class="row">
                 <input type="text" id="toAccount"
-                       name="To_account_id"
-                       placeholder="ACC002"
+                       name="code"
+                       placeholder="username"
                        required>
 
                 <button type="button"
@@ -241,7 +241,7 @@
     function loadUserName() {
         let code = document.getElementById("toAccount").value;
 
-        fetch("/getUserByCode?code=" + code)
+        fetch("/getUserByCode?username=" + code)
             .then(res => res.text())
             .then(name => {
                 document.getElementById("toName").innerText = name;

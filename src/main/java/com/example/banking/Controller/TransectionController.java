@@ -5,13 +5,13 @@ import com.example.banking.DTO.RegisterDTO;
 import com.example.banking.DTO.TransectionDTO;
 import com.example.banking.Entity.AccountClass;
 import com.example.banking.Entity.BillClass;
+import com.example.banking.Entity.TransactionsClass;
 import com.example.banking.Entity.UserClass;
-import com.example.banking.Repository.AccountRepository;
-import com.example.banking.Repository.BillRepository;
-import com.example.banking.Repository.TransactionRepository;
-import com.example.banking.Repository.UserRepository;
+import com.example.banking.Repository.*;
 import com.example.banking.Security.CustomUserDetails;
 import com.example.banking.Service.AccountService;
+import com.example.banking.Service.RegisterService;
+import com.example.banking.Service.UsersService;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
@@ -26,7 +26,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -45,6 +47,9 @@ public class TransectionController {
     @Autowired
     private UserRepository userrepo;
 
+    @Autowired
+    EventRepository eventrepo;
+
     // Login
     @GetMapping("/login")
     public String login() {
@@ -62,18 +67,19 @@ public class TransectionController {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
 
         model.addAttribute("user", user);
-
+        //event
+        model.addAttribute("event", eventrepo.findByStatusTrueOrderByDisLayOrDerAsc());
         // transaction history
-        model.addAttribute("list",
-                transactionRepository.findTop5ByFromAccountOrderByCreatedDesc(user));
-
+        AccountClass account = user.getAccounts();
+        List<TransactionsClass> transactions = transactionRepository.findTTop5ByFromAccountOrderByCreatedDesc(account);
+        model.addAttribute("list", transactions != null ? transactions : Collections.emptyList());
         return "dashboard";
     }
 
     //Transection
     @GetMapping("/banking")
     public String showForm(Model model, @AuthenticationPrincipal CustomUserDetails user, @ModelAttribute TransectionDTO tmp) {
-        model.addAttribute("nameUser", user.getUsername());
+        model.addAttribute("fullname", user.getFullName());
 
         return "fromCK";
     }
@@ -89,6 +95,9 @@ public class TransectionController {
         return "fromCK";
     }
 
+    @Autowired
+    RegisterService createser;
+
     //Create
     @GetMapping("/create")
     public String fromCreate(Model model) {
@@ -98,21 +107,20 @@ public class TransectionController {
 
     @PostMapping("/create")
     public String Register_in_bank(@ModelAttribute RegisterDTO dto, Model model) {
-        if (userrepo.findByUsername(dto.getUsername()).isPresent()) {
-            model.addAttribute("error", "Code đã tồn tại!!!!");
-            return "formCreate";
+        try {
+            // Kiểm tra xem username đã tồn tại chưa
+            if (createser.isUsernameTaken(dto.getUsername())) {
+                model.addAttribute("error", "Code đã tồn tại!!!!");
+                return "formCreate";  // Trả về trang tạo tài khoản nếu có lỗi
+            }
+            // Gọi service để tạo user và tài khoản
+            createser.registerUser(dto);
+            model.addAttribute("success", "Bạn đã đăng kí thành công!!!");
+            return "redirect:/login";  // Redirect đến trang login sau khi đăng ký thành công
+        } catch (Exception e) {
+            model.addAttribute("error", "Đã có lỗi xảy ra, vui lòng thử lại.");
+            return "formCreate";  // Nếu có lỗi, trả về trang tạo tài khoản
         }
-
-        UserClass user = new UserClass();
-        user.setUsername(dto.getUsername());
-        user.setPassword(dto.getPassword());
-        user.setFullName(dto.getFullName());
-        user.setEmail(dto.getEmail());
-        user.setPhone(dto.getPhone());
-        user.setAvatar(dto.getAvatar());
-        userrepo.save(user);
-        model.addAttribute("success", "Bạn đã đăng kí thành công!!!");
-        return "redirect:/login";
     }
 
     // Bill
@@ -156,7 +164,8 @@ public class TransectionController {
     @GetMapping("/getUserByCode")
     @ResponseBody
     public String getUserByCode(@RequestParam String username) {
-        return userrepo.findByUsername(username).map(UserClass::getUsername).orElse("Tài khoản này không tồn tại trong hệ thống");
+
+        return accountRepository.findByCode(username).map(acc -> acc.getUser().getFullName()).orElse("Tài khoản này không tồn tại trong hệ thống");
     }
     // test spi findCode
 //    @GetMapping("/getUserByCode")
@@ -170,7 +179,8 @@ public class TransectionController {
     @ResponseBody
     public byte[] myQR(@AuthenticationPrincipal CustomUserDetails user) throws Exception {
 
-        String data = user.getUsername()
+        AccountClass acc = accountRepository.findByUserId(user.getUserId()).orElseThrow(() -> new RuntimeException("Account not found"));
+        String data = acc.getCode()
                 + "|" + user.getUsername();
 
         QRCodeWriter writer = new QRCodeWriter();

@@ -84,6 +84,8 @@ public class TransactionsClass {
     private AccountClass toAccount;
     private BigDecimal amount;
     private String type;
+
+    @Column(name = "created")
     private LocalDateTime created;
     private String description;
     private String status;

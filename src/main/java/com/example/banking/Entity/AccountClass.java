@@ -15,7 +15,7 @@ public class AccountClass {
     private String code;
     private BigDecimal balance;
     private String currency;
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "user_id")
     private UserClass user;
     @Version

@@ -27,7 +27,7 @@
             padding: 30px;
             border-radius: 12px;
             width: 350px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         }
 
         h2 {
@@ -57,7 +57,7 @@
 
         input:focus {
             border-color: #667eea;
-            box-shadow: 0 0 5px rgba(102,126,234,0.5);
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
         }
 
         button {
@@ -99,8 +99,8 @@
     <form th:action="@{/create}" th:object="${dto}" method="post">
 
         <div class="form-group">
-            <label>Code</label>
-            <input type="text" th:field="*{code}" placeholder="Nhập mã tài khoản">
+            <label>Username</label>
+            <input type="text" th:field="*{username}" placeholder="Nhập mã tài khoản">
         </div>
 
         <div class="form-group">
@@ -110,16 +110,20 @@
 
         <div class="form-group">
             <label>Name</label>
-            <input type="text" th:field="*{name}" placeholder="Tên hiển thị">
+            <input type="text" th:field="*{fullName}" placeholder="Tên hiển thị">
         </div>
 
         <div class="form-group">
-            <label>Balance</label>
-            <input type="number" th:field="*{balance}" placeholder="0">
+            <label>Email</label>
+            <input type="text" th:field="*{email}" placeholder="abc@gmail.com">
         </div>
         <div class="form-group">
-            <label>Currency</label>
-            <input type="text" th:field="*{currency}" placeholder="vnd">
+            <label>Avatar</label>
+            <input type="text" th:field="*{avatar}" placeholder="link image">
+        </div>
+        <div class="form-group">
+            <label>Number phone</label>
+            <input type="text" th:field="*{phone}" placeholder="0123456789">
         </div>
         <button type="submit">Tạo tài khoản</button>
     </form>

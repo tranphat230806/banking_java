@@ -23,11 +23,11 @@ public class UserClass {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    public List<AccountClass> getAccounts() {
+    public AccountClass getAccounts() {
         return accounts;
     }
 
-    public void setAccounts(List<AccountClass> accounts) {
+    public void setAccounts(AccountClass accounts) {
         this.accounts = accounts;
     }
 
@@ -39,8 +39,8 @@ public class UserClass {
         this.createdAt = createdAt;
     }
 
-    @OneToMany(mappedBy = "user")
-    private List<AccountClass> accounts;
+    @OneToOne(mappedBy = "user")
+    private AccountClass accounts;
 
     public UserClass() {
     }

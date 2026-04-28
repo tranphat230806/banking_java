@@ -2,11 +2,14 @@ package com.example.banking.Security;
 
 import com.example.banking.Entity.AccountClass;
 import com.example.banking.Entity.UserClass;
+import com.example.banking.Repository.AccountRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.*;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.*;
+
 
 public class CustomUserDetails implements UserDetails {
 
@@ -29,6 +32,14 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public String getUsername() {
         return user.getUsername(); //  login bằng username
+    }
+
+    public Long getUserId() {
+        return user.getId();
+    }
+
+    public String getFullName() {
+        return user.getFullName();  // Lấy fullName từ UserClass
     }
 
     @Override

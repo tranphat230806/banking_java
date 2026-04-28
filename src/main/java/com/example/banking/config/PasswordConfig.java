@@ -22,7 +22,7 @@ public class PasswordConfig {
                 ).formLogin(form -> form
                         .loginPage("/login")// nếu chưa có login page thì tạm bỏ dòng này
                         .loginProcessingUrl("/login")
-                        .usernameParameter("code")
+                        .usernameParameter("username")
                         .passwordParameter("password")
                         .defaultSuccessUrl("/dashboard", true)
                         .permitAll()
