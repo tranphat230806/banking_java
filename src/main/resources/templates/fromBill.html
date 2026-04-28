@@ -93,7 +93,7 @@
     <div class="row">
         <span class="label">Người gửi:</span>
         <span class="value"
-              th:text="${bill.accountClass.name}"></span>
+              th:text="${bill.accountClass.user.fullName}"></span>
     </div>
 
     <div class="row">
@@ -105,7 +105,7 @@
     <div class="row">
         <span class="label">Người nhận:</span>
         <span class="value"
-              th:text="${bill.transaction_id.toAccount.name}"></span>
+              th:text="${bill.transaction_id.toAccount.user.fullName}"></span>
     </div>
 
     <div class="row">

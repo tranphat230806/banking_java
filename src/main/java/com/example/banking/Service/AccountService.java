@@ -51,16 +51,11 @@ public class AccountService {
 
         // 3. Lấy tài khoản chính của user
         AccountClass fromAcc = userEntity.getAccounts();
-        ;
-
+        
         // 4. Tài khoản nhận tiền (theo code nhập)
-        AccountClass toAcc = accrepo.findByCode(request.getTo_account_id())
+        AccountClass toAcc = accrepo.findByCode(request.getToAccountId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản nhận"));
 
-        // 5. Check số tiền
-        if (request.getAmount().compareTo(BigDecimal.valueOf(2000)) <= 0) {
-            throw new RuntimeException("Số tiền chuyển phải lớn hơn 2.000đ");
-        }
 
         // 6. Không cho chuyển chính mình
         if (fromAcc.getId() == (toAcc.getId())) {
