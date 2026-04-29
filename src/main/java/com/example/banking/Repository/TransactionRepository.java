@@ -9,4 +9,6 @@ import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<TransactionsClass, Long> {
     List<TransactionsClass> findTTop5ByFromAccountOrderByCreatedDesc(AccountClass fromAccount);
+
+    List<TransactionsClass> findByFromAccountOrToAccountOrderByCreatedDesc(AccountClass formAccount, AccountClass toAccount);
 }

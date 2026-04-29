@@ -107,6 +107,16 @@ public class TransectionController {
         return "profileUser";
     }
 
+    //History Transection
+    @GetMapping("/history")
+    public String fromHistory(Model model, @AuthenticationPrincipal CustomUserDetails user) {
+        UserClass userClass = userrepo.findByUsername(user.getUsername()).orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+        AccountClass account = accountRepository.findByUserId(userClass.getId()).orElseThrow(() -> new RuntimeException("không tìm thấy tài khoản này!!!"));
+        model.addAttribute("list", transactionRepository.findByFromAccountOrToAccountOrderByCreatedDesc(account, account));
+        model.addAttribute("account", account);
+        return "historyTransection";
+    }
+
     @Autowired
     RegisterService createser;
 
