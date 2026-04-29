@@ -95,6 +95,18 @@ public class TransectionController {
         return "fromCK";
     }
 
+    //profileUser
+    @GetMapping("/profile")
+    public String fromProfile(Model model, @AuthenticationPrincipal CustomUserDetails user) {
+        String username = user.getUsername();
+        UserClass userclass = userrepo.findByUsername(username).orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+
+        AccountClass accountClass = accountRepository.findByUserId(userclass.getId()).orElseThrow(() -> new RuntimeException("không tìm thấy account"));
+        model.addAttribute("user", userclass);
+        model.addAttribute("account", accountClass);
+        return "profileUser";
+    }
+
     @Autowired
     RegisterService createser;
 
