@@ -17,7 +17,7 @@ public class PasswordConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/create", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/login", "/forgot", "/reset", "/create", "/forgot/**", "/css/**", "/js/**").permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(form -> form
                         .loginPage("/login")// nếu chưa có login page thì tạm bỏ dòng này

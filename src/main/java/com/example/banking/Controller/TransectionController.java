@@ -11,6 +11,7 @@ import com.example.banking.Repository.*;
 import com.example.banking.Security.CustomUserDetails;
 import com.example.banking.Service.AccountService;
 import com.example.banking.Service.RegisterService;
+import com.example.banking.Service.ResetService;
 import com.example.banking.Service.UsersService;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
@@ -156,6 +157,46 @@ public class TransectionController {
         model.addAttribute("bill", bill);
 
         return "fromBill";
+    }
+
+    // function forgot password
+    @Autowired
+    ResetService resetser;
+
+    @GetMapping("/forgot")
+    public String fromForgot() {
+        return "forgotPassword";
+    }
+
+    @PostMapping("/forgot")
+    public String sendOtp(@RequestParam String email, Model model) {
+        try {
+            resetser.guiOTP(email);
+            model.addAttribute("email", email);
+            return "resetPassword";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "forgotPassword";
+        }
+    }
+
+    @GetMapping("/reset")
+    public String resetPage() {
+        return "resetPassword";
+    }
+
+    @PostMapping("/reset")
+    public String fromReset(@RequestParam String otp,
+                            @RequestParam String password,
+                            Model model) {
+        try {
+            resetser.resetPassword(otp, password);
+            model.addAttribute("message", "Đổi mật khẩu thành công");
+            return "login";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "resetPassword";
+        }
     }
 
     // ===============================
