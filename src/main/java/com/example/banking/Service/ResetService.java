@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Random;
 
+@Transactional
 @Service
 public class ResetService {
     @Autowired
@@ -29,7 +30,7 @@ public class ResetService {
     //send OTP to user
     public void guiOTP(String email) {
         UserClass user = userepo.findByEmail(email).orElseThrow(() -> new RuntimeException("không tìm thấy email này trong hệ thống"));
-        String otp = String.valueOf(10000 + new Random().nextInt(900000));
+        String otp = String.valueOf(100000 + new Random().nextInt(900000));
         ResetPasswordClass reset = new ResetPasswordClass();
         reset.setUser(user);
         reset.setCodeOTP(otp);

@@ -192,10 +192,10 @@ public class TransectionController {
         try {
             resetser.resetPassword(otp, password);
             model.addAttribute("message", "Đổi mật khẩu thành công");
-            return "login";
+            return "redirect:/login";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
-            return "resetPassword";
+            return "redirect:/resetPassword";
         }
     }
 
