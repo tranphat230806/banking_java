@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>QR Payment</title>
+
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: white;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 40px auto;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        .sub {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 20px;
+        }
+
+        #reader {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-back {
+            margin-top: 20px;
+            display: inline-block;
+            padding: 10px 20px;
+            background: #38bdf8;
+            color: black;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .btn-back:hover {
+            background: #0ea5e9;
+        }
+
+        .status {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #22c55e;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>📷 Quét QR chuyển khoản</h2>
+    <p class="sub">Đưa mã QR vào khung để quét</p>
+
+    <div id="reader"></div>
+
+    <div id="status" class="status"></div>
+
+    <a href="/dashboard" class="btn-back">⬅ Quay về Dashboard</a>
+</div>
+
+<script>
+    function onScanSuccess(decodedText) {
+
+        document.getElementById("status").innerText = "✔ Đã quét thành công!";
+
+        fetch("/scanQR", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({qr: decodedText})
+        })
+            .then(res => res.json())
+            .then(data => {
+
+                if (data.status === "success") {
+
+                    // 🔥 redirect sang banking + truyền data
+                    window.location.href =
+                        "/banking?toAccount=" + (data.toAccount || "") +
+                        "&amount=" + (data.amount || "") +
+                        "&description=" + (data.description || "");
+
+                } else {
+                    alert("QR không hợp lệ");
+                    return;
+                }
+
+            });
+    }
+
+    const scanner = new Html5QrcodeScanner(
+        "reader",
+        {
+            fps: 10,
+            qrbox: 250
+        }
+    );
+    console.log("QR raw:", decodedText);
+
+    scanner.render(onScanSuccess);
+</script>
+
+</body>
+</html>

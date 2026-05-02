@@ -126,10 +126,16 @@
             <input type="text" th:field="*{phone}" placeholder="0123456789">
         </div>
         <button type="submit">Tạo tài khoản</button>
+        <br>
+        <br>
+        <div class="form-group">
+            <a href="/login">← Quay lại đăng nhập</a>
+        </div>
     </form>
 
     <div class="msg error" th:text="${error}"></div>
     <div class="msg success" th:text="${success}"></div>
+
 </div>
 
 </body>

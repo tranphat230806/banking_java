@@ -79,14 +79,24 @@ public class TransectionController {
 
     //Transection
     @GetMapping("/banking")
-    public String showForm(Model model, @AuthenticationPrincipal CustomUserDetails user, @ModelAttribute TransectionDTO tmp) {
+    public String showForm(Model model,
+                           @AuthenticationPrincipal CustomUserDetails user,
+                           @RequestParam(required = false) String toAccount,
+                           @RequestParam(required = false) String amount,
+                           @RequestParam(required = false) String description) {
         model.addAttribute("fullname", user.getFullName());
+        
+        model.addAttribute("toAccount", toAccount);
+        model.addAttribute("amount", amount);
+        model.addAttribute("description", description);
 
         return "fromCK";
     }
 
     @PostMapping("/banking")
-    public String Transetion_in_banking(@ModelAttribute TransectionDTO request, @AuthenticationPrincipal CustomUserDetails user, BillDTO billdto, Model model) {
+    public String Transetion_in_banking(@ModelAttribute TransectionDTO request,
+                                        @AuthenticationPrincipal CustomUserDetails user,
+                                        BillDTO billdto, Model model) {
         try {
             BillClass bill = ser.transferMoney(request, user, billdto);
             return "redirect:/bill/" + bill.getId();
@@ -195,8 +205,14 @@ public class TransectionController {
             return "redirect:/login";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
-            return "redirect:/resetPassword";
+            return "resetPassword";
         }
+    }
+
+    //function QR payment
+    @GetMapping("/qr")
+    public String qrPage() {
+        return "qrScan";
     }
 
     // ===============================

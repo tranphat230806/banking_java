@@ -180,6 +180,7 @@
             <div class="row">
                 <input type="text" id="toAccount"
                        name="toAccountId"
+                       th:value="${toAccount}"
                        placeholder="username"
                        required>
 
@@ -201,6 +202,7 @@
             <input type="number"
                    id="amount"
                    name="amount"
+                   th:value="${amount}"
                    step="0.01"
                    placeholder="500000"
                    required>
@@ -211,6 +213,7 @@
             <input type="text"
                    id="description"
                    name="description"
+                   th:value="${description}"
                    placeholder="Thanh toán hóa đơn"
                    required>
         </div>
