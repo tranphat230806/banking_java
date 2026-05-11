@@ -81,14 +81,41 @@ public class TransectionController {
     @GetMapping("/banking")
     public String showForm(Model model,
                            @AuthenticationPrincipal CustomUserDetails user,
-                           @RequestParam(required = false) String toAccount,
+                           @RequestParam(required = false, name = "account") String account,
                            @RequestParam(required = false) String amount,
                            @RequestParam(required = false) String description) {
+
         model.addAttribute("fullname", user.getFullName());
-        
-        model.addAttribute("toAccount", toAccount);
-        model.addAttribute("amount", amount);
-        model.addAttribute("description", description);
+
+        // ưu tiên dữ liệu QR
+        if (account != null) {
+
+            String[] data = account.split("\\|");
+
+            // account
+            if (data.length > 0) {
+                model.addAttribute("toAccount", data[0]);
+            }
+
+            // amount từ QR
+            if (data.length > 1 && !data[1].isBlank()) {
+                model.addAttribute("amount", data[1]);
+            }
+
+            // description từ QR
+            if (data.length > 2 && !data[2].isBlank()) {
+                model.addAttribute("description", data[2]);
+            }
+        }
+
+        // nếu không có QR thì dùng param thường
+        if (amount != null && !amount.isBlank()) {
+            model.addAttribute("amount", amount);
+        }
+
+        if (description != null && !description.isBlank()) {
+            model.addAttribute("description", description);
+        }
 
         return "fromCK";
     }
@@ -259,8 +286,7 @@ public class TransectionController {
     public byte[] myQR(@AuthenticationPrincipal CustomUserDetails user) throws Exception {
 
         AccountClass acc = accountRepository.findByUserId(user.getUserId()).orElseThrow(() -> new RuntimeException("Account not found"));
-        String data = acc.getCode()
-                + "|" + user.getUsername();
+        String data = acc.getCode();
 
         QRCodeWriter writer = new QRCodeWriter();
 

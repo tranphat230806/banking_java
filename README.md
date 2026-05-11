@@ -11,7 +11,7 @@
 
 - **🔐 Xác thực an toàn** - Đăng ký, đăng nhập, khôi phục mật khẩu
 - **💳 Quản lý tài khoản** - Tạo và quản lý nhiều tài khoản ngân hàng
-- **💰 Xử lý giao dịch** - Gửi, rút, chuyển tiền giữa các tài khoản
+- **💰 Xử lý giao dịch** -chuyển tiền giữa các tài khoản
 - **📝 Quản lý hóa đơn** - Theo dõi và thanh toán hóa đơn
 - **📊 Lịch sử giao dịch** - Xem chi tiết tất cả giao dịch
 - **🛡️ Bảo mật cao** - Mã hóa bcrypt, JWT token, RBAC

@@ -1,119 +1,117 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>QR Payment</title>
-
-    <script src="https://unpkg.com/html5-qrcode"></script>
-
+    <title>Quét QR</title>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
         body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: start;
+            min-height: 100vh;
             margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #0f172a, #1e293b);
-            color: white;
-            text-align: center;
+            padding: 20px;
+            color: #fff;
         }
 
-        .container {
-            max-width: 400px;
-            margin: 40px auto;
-        }
-
-        h2 {
-            margin-bottom: 10px;
-        }
-
-        .sub {
-            font-size: 14px;
-            color: #94a3b8;
+        h1 {
             margin-bottom: 20px;
         }
 
         #reader {
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
-        }
-
-        .btn-back {
-            margin-top: 20px;
-            display: inline-block;
-            padding: 10px 20px;
-            background: #38bdf8;
-            color: black;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .btn-back:hover {
-            background: #0ea5e9;
+            width: 300px;
+            height: 300px;
+            border: 4px solid #fff;
+            border-radius: 10px;
+            margin-bottom: 20px;
         }
 
         .status {
-            margin-top: 15px;
-            font-size: 14px;
-            color: #22c55e;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .btn-retry {
+            background: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #4facfe;
+        }
+
+        .btn-retry:hover {
+            background: #f0f0f0;
         }
     </style>
 </head>
-
 <body>
-
-<div class="container">
-    <h2>📷 Quét QR chuyển khoản</h2>
-    <p class="sub">Đưa mã QR vào khung để quét</p>
-
-    <div id="reader"></div>
-
-    <div id="status" class="status"></div>
-
-    <a href="/dashboard" class="btn-back">⬅ Quay về Dashboard</a>
-</div>
-
+<h1>Quét QR của bạn</h1>
+<div id="reader"></div>
+<div class="status" id="status">Đang chờ quét QR...</div>
+<button class="btn-retry" onclick="restartScanner()">Quét lại</button>
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 <script>
-    function onScanSuccess(decodedText) {
+    let html5QrcodeScanner;
 
-        document.getElementById("status").innerText = "✔ Đã quét thành công!";
 
-        fetch("/scanQR", {
-            method: "POST",
+    function onScanSuccess(decodedText, decodedResult) {
+        document.getElementById('status').innerText = "Đang xử lý QR...";
+        const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+        fetch('/scanQR', {
+            method: 'POST',
             headers: {
-                "Content-Type": "application/json"
+                'Content-Type': 'application/json',
+                [header]: token // thêm CSRF header
             },
             body: JSON.stringify({qr: decodedText})
         })
             .then(res => res.json())
             .then(data => {
-
-                if (data.status === "success") {
-
-                    // 🔥 redirect sang banking + truyền data
-                    window.location.href =
-                        "/banking?toAccount=" + (data.toAccount || "") +
-                        "&amount=" + (data.amount || "") +
-                        "&description=" + (data.description || "");
-
+                if (data.status === 'success') {
+                    window.location.href = '/banking?account=' + encodeURIComponent(decodedText);
                 } else {
-                    alert("QR không hợp lệ");
-                    return;
+                    document.getElementById('status').innerText = "QR không hợp lệ. Thử lại.";
+                    restartScanner();
                 }
-
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('status').innerText = "Lỗi server. Thử lại.";
+                restartScanner();
             });
+
+        html5QrcodeScanner.stop().catch(err => console.error(err));
     }
 
-    const scanner = new Html5QrcodeScanner(
-        "reader",
-        {
-            fps: 10,
-            qrbox: 250
-        }
-    );
-    console.log("QR raw:", decodedText);
+    function onScanFailure(error) {
+        // console.log(`Scan error: ${error}`);
+    }
 
-    scanner.render(onScanSuccess);
+    function startScanner() {
+        html5QrcodeScanner = new Html5Qrcode("reader");
+        html5QrcodeScanner.start(
+            {facingMode: "user"},
+            {fps: 10, qrbox: 250},
+            onScanSuccess,
+            onScanFailure
+        ).catch(err => console.error(err));
+    }
+
+    function restartScanner() {
+        document.getElementById('status').innerText = "Đang chờ quét QR...";
+        html5QrcodeScanner.stop().finally(() => startScanner());
+    }
+
+    window.onload = startScanner;
 </script>
-
 </body>
 </html>

@@ -240,9 +240,26 @@
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
+<script>
+    window.onload = function () {
+        const qrData = sessionStorage.getItem('qrData');
+        if (qrData) {
+            const data = JSON.parse(qrData);
+            if (data.toAccount) document.getElementById('toAccount').value = data.toAccount;
+            if (data.accountName) {
+                document.getElementById('toName').innerText = data.accountName;
+            }
+            if (data.amount) document.getElementById('amount').value = data.amount;
+            if (data.description) document.getElementById('description').value = data.description;
 
+            // Xóa sessionStorage nếu muốn chỉ dùng 1 lần
+            sessionStorage.removeItem('qrData');
+        }
+    };
+</script>
 <script>
     function loadUserName() {
+
         let code = document.getElementById("toAccount").value;
 
         fetch("/getUserByCode?username=" + code)
@@ -266,27 +283,33 @@
 
         scanner.render(function (decodedText) {
 
-            // QR format:
-            // ACC002|50000|Thanh toan
-
             let data = decodedText.split("|");
 
-            document.getElementById("toAccount").value = data[0];
+            // username
+            document.getElementById("toAccount").value = data[0] || "";
 
+            // amount
             if (data.length > 1) {
                 document.getElementById("amount").value = data[1];
             }
 
+            // description
             if (data.length > 2) {
                 document.getElementById("description").value = data[2];
             }
+
             loadUserName();
-            scanner.clear();
-            document.getElementById("reader").style.display = "none";
+
+            scanner.clear().then(() => {
+                document.getElementById("reader").style.display = "none";
+            });
+
         });
     }
 
-    document.getElementById("toAccount").addEventListener("blur", loadUserName);
+    document
+        .getElementById("toAccount")
+        .addEventListener("blur", loadUserName);
 </script>
 
 </body>
