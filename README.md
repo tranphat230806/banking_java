@@ -18,14 +18,14 @@
 
 ## ⚙️ Stack Công Nghệ
 
-| Lớp          | Công Nghệ              | Phiên Bản |
-|--------------|------------------------|-----------|
-| **Backend**  | Spring Boot            | 2.x+      |
-| **Ngôn Ngữ** | Java                   | 11+       |
-| **Database** | MySQL/PostgreSQL + JPA | Latest    |
-| **Security** | Spring Security, JWT   | 5.x+      |
-| **Build**    | Maven                  | 3.6+      |
-| **Test**     | JUnit 5                | 5.x+      |
+| Lớp          | Công Nghệ            | Phiên Bản |
+|--------------|----------------------|-----------|
+| **Backend**  | Spring Boot          | 2.x+      |
+| **Ngôn Ngữ** | Java                 | 11+       |
+| **Database** | MySQL + JPA          | Latest    |
+| **Security** | Spring Security, JWT | 5.x+      |
+| **Build**    | Maven                | 3.6+      |
+| **Test**     | JUnit 5              | 5.x+      |
 
 ## 🚀 Quick Start
 
@@ -312,7 +312,7 @@ MIT License - Xem [LICENSE](LICENSE) để biết chi tiết.
 
 ## 📞 Contact
 
-- 📧 Email: support@banking-system.com
+- 📧 Email: phat.tran09192005@gmail.com
 - 💬 GitHub Issues: [Report a bug](https://github.com/yourname/banking/issues)
 - 📚 Wiki: [Project Wiki](https://github.com/yourname/banking/wiki)
 
