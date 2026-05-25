@@ -226,40 +226,90 @@
         }
 
         .event-slider {
-            width: 100%;
-            height: 220px;
+            width: 95%;
+            margin: auto;
             overflow: hidden;
-            border-radius: 20px;
+            border-radius: 25px;
             position: relative;
         }
 
         .slides {
             display: flex;
-            height: 100%;
-            transition: transform 0.5s ease-in-out;
+            transition: transform 0.8s ease-in-out;
         }
 
         .slide {
+            width: 100%;
             min-width: 100%;
+            flex: 0 0 100%;
             position: relative;
+            height: 330px;
         }
 
+        .event-card {
+            position: relative;
+            width: 100%;
+            height: 330px;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Ảnh banner */
         .event-img {
             width: 100%;
-            height: 220px;
+            height: 100%;
             object-fit: cover;
-            border-radius: 20px;
         }
 
-        /* text overlay */
-        .overlay {
+        /* Lớp phủ tối bên trái */
+        .event-overlay {
             position: absolute;
-            bottom: 15px;
-            left: 15px;
+            left: 30px;
+            bottom: 30px;
+
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(6px);
+
+            padding: 20px 30px;
+            border-radius: 20px;
+
+            max-width: 450px;
             color: white;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 10px;
-            border-radius: 10px;
+        }
+
+        /* Title */
+        .event-overlay h2 {
+            font-size: 22px;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .event-overlay p {
+            font-size: 18px;
+            line-height: 1.5;
+        }
+
+        /* Button */
+        .event-overlay button {
+            margin-top: 18px;
+            padding: 12px 22px;
+
+            border: none;
+            border-radius: 12px;
+
+            background: #00d26a;
+            color: white;
+
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+
+            transition: 0.3s;
+        }
+
+        .event-overlay button:hover {
+            background: #00b85c;
         }
     </style>
 </head>
@@ -300,7 +350,6 @@
             Account ID: <span th:text="${user.id}">1</span>
         </div>
     </div>
-
     <!-- Event -->
     <div class="event-slider">
         <div class="slides">
@@ -308,14 +357,16 @@
 
                 <img th:src="@{${e.imageURL}}" class="event-img"/>
 
-                <div class="overlay">
-                    <h3 th:text="${e.title}">Title</h3>
-                    <p th:text="${e.description}">Description</p>
+                <div class="event-overlay">
+                    <h2 th:text="${e.title}"></h2>
+                    <p th:text="${e.description}"></p>
+
+                    <button>Xem thêm</button>
                 </div>
             </div>
         </div>
-    </div>
 
+    </div>
     <!-- Actions -->
     <div class="actions">
         <button class="action-btn transfer"

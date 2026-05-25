@@ -188,9 +188,9 @@
 
                 <td th:text="${item.id}">1</td>
 
-                <td th:text="${item.fromAccount.code}">ACC001</td>
+                <td th:text="${item.fromAccount.user.fullName}">ACC001</td>
 
-                <td th:text="${item.toAccount.code}">ACC002</td>
+                <td th:text="${item.toAccount.user.fullName}">ACC002</td>
 
                 <td th:if="${item.fromAccount.id == account.id}"
                     class="money-out"

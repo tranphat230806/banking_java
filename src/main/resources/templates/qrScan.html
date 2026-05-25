@@ -3,115 +3,649 @@
 <head>
     <meta charset="UTF-8">
     <title>Quét QR</title>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(to right, #4facfe, #00f2fe);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: start;
-            min-height: 100vh;
+
+        * {
             margin: 0;
-            padding: 20px;
-            color: #fff;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+
+            font-family: 'Segoe UI', sans-serif;
+
+            min-height: 100vh;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+
+            overflow: hidden;
+        }
+
+        .container {
+
+            width: 100%;
+            max-width: 430px;
+
+            padding: 30px 25px;
+
+            border-radius: 28px;
+
+            background: rgba(255, 255, 255, 0.12);
+
+            backdrop-filter: blur(15px);
+
+            border: 1px solid rgba(255, 255, 255, 0.2);
+
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.25);
+
+            text-align: center;
         }
 
         h1 {
-            margin-bottom: 20px;
+            color: #fff;
+            font-size: 34px;
+            margin-bottom: 25px;
+            font-weight: 700;
         }
 
+        /* CAMERA WRAPPER */
+        .reader-wrapper {
+
+            position: relative;
+
+            width: 100%;
+            height: 350px;
+
+            overflow: hidden;
+
+            border-radius: 24px;
+
+            border: 4px solid rgba(255, 255, 255, 0.8);
+
+            background: #000;
+
+            margin-bottom: 25px;
+
+            transition: 0.3s;
+
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+        }
+
+        .reader-wrapper.success {
+            border-color: #00ff88;
+            box-shadow: 0 0 25px #00ff88;
+        }
+
+        .reader-wrapper.error {
+            border-color: #ff4d4d;
+            box-shadow: 0 0 25px #ff4d4d;
+        }
+
+        /* CAMERA */
         #reader {
-            width: 300px;
-            height: 300px;
-            border: 4px solid #fff;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* VIDEO FIX */
+        #reader video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+
+        #reader__scan_region {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        #reader__dashboard {
+            display: none !important;
+        }
+
+        img[alt="Info icon"] {
+            display: none !important;
+        }
+
+        /* SCAN LINE */
+        .scanner-line {
+
+            position: absolute;
+
+            left: 0;
+            top: 0;
+
+            width: 100%;
+            height: 4px;
+
+            background: #00ff88;
+
+            z-index: 999;
+
+            box-shadow: 0 0 10px #00ff88,
+            0 0 20px #00ff88,
+            0 0 35px #00ff88;
+
+            animation: scan 2s linear infinite;
+        }
+
+        @keyframes scan {
+
+            0% {
+                top: 0;
+            }
+
+            50% {
+                top: calc(100% - 4px);
+            }
+
+            100% {
+                top: 0;
+            }
         }
 
         .status {
+
+            color: white;
+
             font-size: 18px;
-            margin-bottom: 10px;
+
+            font-weight: 500;
+
+            margin-bottom: 25px;
+
+            min-height: 24px;
+        }
+
+        .button-group {
+
+            display: flex;
+
+            gap: 15px;
+
+            justify-content: center;
+
+            flex-wrap: wrap;
+        }
+
+        .btn {
+
+            border: none;
+            outline: none;
+
+            padding: 14px 24px;
+
+            border-radius: 14px;
+
+            font-size: 16px;
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition: 0.3s;
+
+            min-width: 150px;
+
+            text-decoration: none;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         .btn-retry {
             background: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #4facfe;
+            color: #0072ff;
         }
 
-        .btn-retry:hover {
-            background: #f0f0f0;
+        .btn-home {
+            background: #111827;
+            color: #fff;
         }
+
+        .btn:hover {
+
+            transform: translateY(-3px);
+
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* LOADING */
+        .loading {
+
+            width: 22px;
+            height: 22px;
+
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #fff;
+
+            border-radius: 50%;
+
+            margin: auto;
+
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* MOBILE */
+        @media (max-width: 480px) {
+
+            .container {
+                width: 95%;
+                padding: 25px 18px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .reader-wrapper {
+                height: 320px;
+            }
+        }
+
     </style>
 </head>
+
 <body>
-<h1>Quét QR của bạn</h1>
-<div id="reader"></div>
-<div class="status" id="status">Đang chờ quét QR...</div>
-<button class="btn-retry" onclick="restartScanner()">Quét lại</button>
+
+<div class="container">
+
+    <h1>Quét QR của bạn</h1>
+
+    <div class="reader-wrapper" id="readerWrapper">
+
+        <div id="reader"></div>
+
+        <div class="scanner-line"></div>
+
+    </div>
+
+    <div class="status" id="status">
+        Đang chờ quét QR...
+    </div>
+
+    <div class="button-group">
+
+        <button
+                id="retryBtn"
+                class="btn btn-retry"
+                onclick="restartScanner()">
+
+            Quét lại
+
+        </button>
+
+        <a href="/dashboard"
+           class="btn btn-home">
+
+            Về trang chủ
+
+        </a>
+
+    </div>
+
+</div>
+
 <meta name="_csrf" th:content="${_csrf.token}"/>
 <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
 <script>
+
     let html5QrcodeScanner;
 
+    let scanned = false;
 
-    function onScanSuccess(decodedText, decodedResult) {
-        document.getElementById('status').innerText = "Đang xử lý QR...";
-        const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-        const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+    let isStarting = false;
 
-        fetch('/scanQR', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                [header]: token // thêm CSRF header
-            },
-            body: JSON.stringify({qr: decodedText})
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    window.location.href = '/banking?account=' + encodeURIComponent(decodedText);
-                } else {
-                    document.getElementById('status').innerText = "QR không hợp lệ. Thử lại.";
-                    restartScanner();
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                document.getElementById('status').innerText = "Lỗi server. Thử lại.";
-                restartScanner();
+    const statusEl =
+        document.getElementById('status');
+
+    const readerWrapper =
+        document.getElementById('readerWrapper');
+
+    const retryBtn =
+        document.getElementById('retryBtn');
+
+    function setStatus(message) {
+
+        statusEl.innerText = message;
+    }
+
+    function setLoading() {
+
+        statusEl.innerHTML =
+            '<div class="loading"></div>';
+    }
+
+    function resetBorder() {
+
+        readerWrapper.classList.remove(
+            'success',
+            'error'
+        );
+    }
+
+    function successBorder() {
+
+        resetBorder();
+
+        readerWrapper.classList.add('success');
+    }
+
+    function errorBorder() {
+
+        resetBorder();
+
+        readerWrapper.classList.add('error');
+    }
+
+    function vibrate() {
+
+        if (navigator.vibrate) {
+
+            navigator.vibrate(200);
+        }
+    }
+
+    function playBeep() {
+
+        const audio = new Audio(
+            'https://actions.google.com/sounds/v1/cartoon/pop.ogg'
+        );
+
+        audio.play()
+            .catch(() => {
             });
+    }
 
-        html5QrcodeScanner.stop().catch(err => console.error(err));
+    async function onScanSuccess(decodedText) {
+
+        if (scanned) return;
+
+        scanned = true;
+
+        successBorder();
+
+        vibrate();
+
+        playBeep();
+
+        setLoading();
+
+        retryBtn.disabled = true;
+
+        const token =
+            document.querySelector(
+                'meta[name="_csrf"]'
+            ).getAttribute('content');
+
+        const header =
+            document.querySelector(
+                'meta[name="_csrf_header"]'
+            ).getAttribute('content');
+
+        try {
+
+            if (!navigator.onLine) {
+
+                throw new Error('NO_INTERNET');
+            }
+
+            await html5QrcodeScanner.stop();
+
+            const controller =
+                new AbortController();
+
+            const timeout =
+                setTimeout(() => {
+                    controller.abort();
+                }, 10000);
+
+            const response =
+                await fetch('/scanQR', {
+
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [header]: token
+                    },
+
+                    body: JSON.stringify({
+                        qr: decodedText
+                    }),
+
+                    signal: controller.signal
+                });
+
+            clearTimeout(timeout);
+
+            if (response.status === 403) {
+
+                throw new Error('SESSION_EXPIRED');
+            }
+
+            if (!response.ok) {
+
+                throw new Error('SERVER_ERROR');
+            }
+
+            const data =
+                await response.json();
+
+            if (data.status === 'success') {
+
+                setStatus(
+                    'Quét thành công. Đang chuyển trang...'
+                );
+
+                setTimeout(() => {
+
+                    window.location.href =
+                        '/banking?account='
+                        + encodeURIComponent(decodedText);
+
+                }, 800);
+
+            } else {
+
+                throw new Error('INVALID_QR');
+            }
+
+        } catch (err) {
+
+            console.error(err);
+
+            scanned = false;
+
+            retryBtn.disabled = false;
+
+            errorBorder();
+
+            if (err.name === 'AbortError') {
+
+                setStatus(
+                    'Kết nối quá lâu. Thử lại.'
+                );
+
+            } else if (err.message === 'NO_INTERNET') {
+
+                setStatus(
+                    'Không có kết nối internet.'
+                );
+
+            } else if (err.message === 'SESSION_EXPIRED') {
+
+                setStatus(
+                    'Phiên đăng nhập đã hết hạn.'
+                );
+
+            } else if (err.message === 'INVALID_QR') {
+
+                setStatus(
+                    'QR không hợp lệ.'
+                );
+
+            } else {
+
+                setStatus(
+                    'Lỗi server. Thử lại.'
+                );
+            }
+
+            restartScanner();
+        }
     }
 
     function onScanFailure(error) {
-        // console.log(`Scan error: ${error}`);
+        // ignore
     }
 
-    function startScanner() {
-        html5QrcodeScanner = new Html5Qrcode("reader");
-        html5QrcodeScanner.start(
-            {facingMode: "user"},
-            {fps: 10, qrbox: 250},
-            onScanSuccess,
-            onScanFailure
-        ).catch(err => console.error(err));
+    async function startScanner() {
+
+        if (isStarting) return;
+
+        isStarting = true;
+
+        resetBorder();
+
+        setStatus(
+            'Đang chờ quét QR...'
+        );
+
+        try {
+
+            if (!navigator.mediaDevices) {
+
+                throw new Error(
+                    'BROWSER_NOT_SUPPORTED'
+                );
+            }
+
+            html5QrcodeScanner =
+                new Html5Qrcode("reader");
+
+            try {
+
+                await html5QrcodeScanner.start(
+                    {
+                        facingMode: "environment"
+                    },
+
+                    {
+                        fps: 10,
+
+                        qrbox: {
+                            width: 250,
+                            height: 250
+                        },
+
+                        aspectRatio: 1
+                    },
+
+                    onScanSuccess,
+                    onScanFailure
+                );
+
+            } catch (cameraErr) {
+
+                /* fallback camera trước */
+
+                await html5QrcodeScanner.start(
+                    {
+                        facingMode: "user"
+                    },
+
+                    {
+                        fps: 10,
+
+                        qrbox: {
+                            width: 250,
+                            height: 250
+                        },
+
+                        aspectRatio: 1
+                    },
+
+                    onScanSuccess,
+                    onScanFailure
+                );
+            }
+
+        } catch (err) {
+
+            console.error(err);
+
+            errorBorder();
+
+            if (err.message ===
+                'BROWSER_NOT_SUPPORTED') {
+
+                setStatus(
+                    'Trình duyệt không hỗ trợ camera.'
+                );
+
+            } else {
+
+                setStatus(
+                    'Không thể truy cập camera.'
+                );
+            }
+        }
+
+        isStarting = false;
     }
 
-    function restartScanner() {
-        document.getElementById('status').innerText = "Đang chờ quét QR...";
-        html5QrcodeScanner.stop().finally(() => startScanner());
+    async function restartScanner() {
+
+        if (isStarting) return;
+
+        scanned = false;
+
+        retryBtn.disabled = false;
+
+        resetBorder();
+
+        try {
+
+            if (html5QrcodeScanner) {
+
+                await html5QrcodeScanner.stop();
+
+                await html5QrcodeScanner.clear();
+            }
+
+        } catch (err) {
+
+            console.log(err);
+        }
+
+        startScanner();
     }
 
     window.onload = startScanner;
+
 </script>
+
 </body>
 </html>

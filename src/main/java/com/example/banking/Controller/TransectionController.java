@@ -12,7 +12,6 @@ import com.example.banking.Security.CustomUserDetails;
 import com.example.banking.Service.AccountService;
 import com.example.banking.Service.RegisterService;
 import com.example.banking.Service.ResetService;
-import com.example.banking.Service.UsersService;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
@@ -26,7 +25,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayOutputStream;
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -152,6 +150,7 @@ public class TransectionController {
         AccountClass account = accountRepository.findByUserId(userClass.getId()).orElseThrow(() -> new RuntimeException("không tìm thấy tài khoản này!!!"));
         model.addAttribute("list", transactionRepository.findByFromAccountOrToAccountOrderByCreatedDesc(account, account));
         model.addAttribute("account", account);
+        model.addAttribute("user", userClass);
         return "historyTransection";
     }
 
@@ -176,8 +175,9 @@ public class TransectionController {
             // Gọi service để tạo user và tài khoản
             createser.registerUser(dto);
             model.addAttribute("success", "Bạn đã đăng kí thành công!!!");
-            return "redirect:/login";  // Redirect đến trang login sau khi đăng ký thành công
+            return "login";  // Redirect đến trang login sau khi đăng ký thành công
         } catch (Exception e) {
+            e.printStackTrace();
             model.addAttribute("error", "Đã có lỗi xảy ra, vui lòng thử lại.");
             return "formCreate";  // Nếu có lỗi, trả về trang tạo tài khoản
         }
