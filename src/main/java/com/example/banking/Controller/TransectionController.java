@@ -12,6 +12,9 @@ import com.example.banking.Security.CustomUserDetails;
 import com.example.banking.Service.AccountService;
 import com.example.banking.Service.RegisterService;
 import com.example.banking.Service.ResetService;
+import com.example.banking.Service.FaceIdService;
+import com.example.banking.Service.TransferSecurityService;
+import jakarta.servlet.http.HttpSession;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
@@ -48,6 +51,12 @@ public class TransectionController {
 
     @Autowired
     EventRepository eventrepo;
+
+    @Autowired
+    private FaceIdService faceIdService;
+
+    @Autowired
+    private TransferSecurityService transferSecurityService;
 
     // Login
     @GetMapping("/login")
@@ -120,16 +129,172 @@ public class TransectionController {
 
     @PostMapping("/banking")
     public String Transetion_in_banking(@ModelAttribute TransectionDTO request,
-                                        @AuthenticationPrincipal CustomUserDetails user,
-                                        BillDTO billdto, Model model) {
+                                        @AuthenticationPrincipal CustomUserDetails userDetails,
+                                        BillDTO billdto, Model model, HttpSession session) {
         try {
-            BillClass bill = ser.transferMoney(request, user, billdto);
-            return "redirect:/bill/" + bill.getId();
+            UserClass user = userrepo.findByUsername(userDetails.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
+            
+            // Check if PIN is set up
+            if (!transferSecurityService.isPinSetup(user)) {
+                model.addAttribute("message", "Bạn chưa thiết lập mã PIN chuyển tiền. Vui lòng thiết lập trong Profile.");
+                return "fromCK";
+            }
+
+            // Save pending transaction to session and redirect to PIN verify
+            session.setAttribute("pendingTransfer", request);
+            session.setAttribute("pendingBill", billdto);
+            return "redirect:/transfer/verify-pin";
         } catch (Exception e) {
             model.addAttribute("message", e.getMessage());
         }
         return "fromCK";
     }
+
+    // --- FaceID Endpoints ---
+    @PostMapping("/face/register")
+    @ResponseBody
+    public Map<String, Object> registerFace(@RequestBody Map<String, String> body, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            UserClass user = userrepo.findByUsername(userDetails.getUsername()).orElseThrow();
+            boolean success = faceIdService.registerFace(user, body.get("image"));
+            response.put("success", success);
+            if (!success) response.put("message", "Không tìm thấy khuôn mặt, vui lòng thử lại.");
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+        }
+        return response;
+    }
+
+    @GetMapping("/face-verify")
+    public String faceVerifyPage(HttpSession session, Model model) {
+        if (session.getAttribute("pendingTransfer") == null) {
+            return "redirect:/banking";
+        }
+        return "faceVerify";
+    }
+
+    @PostMapping("/face-verify/execute")
+    @ResponseBody
+    public Map<String, Object> executeFaceVerify(@RequestBody Map<String, String> body, @AuthenticationPrincipal CustomUserDetails userDetails, HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            UserClass user = userrepo.findByUsername(userDetails.getUsername()).orElseThrow();
+            boolean isVerified = faceIdService.verifyFace(user, body.get("image"));
+
+            if (isVerified) {
+                TransectionDTO pendingTransfer = (TransectionDTO) session.getAttribute("pendingTransfer");
+                BillDTO pendingBill = (BillDTO) session.getAttribute("pendingBill");
+                
+                if (pendingTransfer != null) {
+                    BillClass bill = ser.transferMoney(pendingTransfer, userDetails, pendingBill);
+                    session.removeAttribute("pendingTransfer");
+                    session.removeAttribute("pendingBill");
+                    response.put("success", true);
+                    response.put("redirect", "/bill/" + bill.getId());
+                } else {
+                    response.put("success", false);
+                    response.put("message", "Giao dịch không tồn tại.");
+                }
+            } else {
+                response.put("success", false);
+                response.put("message", "Xác thực khuôn mặt thất bại.");
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+        }
+        return response;
+    }
+    // ------------------------
+
+    // --- Transfer PIN Endpoints ---
+    @PostMapping("/profile/setup-pin")
+    @ResponseBody
+    public Map<String, Object> setupPin(@RequestBody Map<String, String> body, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            UserClass user = userrepo.findByUsername(userDetails.getUsername()).orElseThrow();
+            transferSecurityService.setupPin(user, body.get("pin"));
+            response.put("success", true);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+        }
+        return response;
+    }
+
+    @GetMapping("/transfer/verify-pin")
+    public String verifyPinPage(HttpSession session, Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (session.getAttribute("pendingTransfer") == null) {
+            return "redirect:/banking";
+        }
+        UserClass user = userrepo.findByUsername(userDetails.getUsername()).orElseThrow();
+        model.addAttribute("isLocked", user.isTransferLocked());
+        return "pinVerify";
+    }
+
+    @PostMapping("/transfer/verify-pin")
+    @ResponseBody
+    public Map<String, Object> verifyPin(@RequestBody Map<String, String> body, @AuthenticationPrincipal CustomUserDetails userDetails, HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            UserClass user = userrepo.findByUsername(userDetails.getUsername()).orElseThrow();
+            boolean isValid = transferSecurityService.verifyPin(user, body.get("pin"));
+
+            if (isValid) {
+                TransectionDTO pendingTransfer = (TransectionDTO) session.getAttribute("pendingTransfer");
+                BillDTO pendingBill = (BillDTO) session.getAttribute("pendingBill");
+
+                if (pendingTransfer != null) {
+                    // Check FaceID requirement
+                    if (pendingTransfer.getAmount() != null && pendingTransfer.getAmount().compareTo(new java.math.BigDecimal("9999999")) > 0) {
+                        if (!user.isFaceRegistered()) {
+                            response.put("success", false);
+                            response.put("message", "Giao dịch yêu cầu FaceID nhưng chưa đăng ký.");
+                            return response;
+                        }
+                        response.put("success", true);
+                        response.put("redirect", "/face-verify");
+                    } else {
+                        BillClass bill = ser.transferMoney(pendingTransfer, userDetails, pendingBill);
+                        session.removeAttribute("pendingTransfer");
+                        session.removeAttribute("pendingBill");
+                        response.put("success", true);
+                        response.put("redirect", "/bill/" + bill.getId());
+                    }
+                } else {
+                    response.put("success", false);
+                    response.put("message", "Giao dịch không tồn tại.");
+                }
+            } else {
+                response.put("success", false);
+                response.put("message", user.isTransferLocked() ? "LOCKED" : "Mã PIN sai.");
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+        }
+        return response;
+    }
+
+    @PostMapping("/transfer/unlock")
+    @ResponseBody
+    public Map<String, Object> unlockTransfer(@RequestBody Map<String, String> body, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            UserClass user = userrepo.findByUsername(userDetails.getUsername()).orElseThrow();
+            boolean success = transferSecurityService.unlockAccount(user, body.get("otp"));
+            response.put("success", success);
+            if (!success) response.put("message", "OTP không hợp lệ hoặc đã hết hạn.");
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+        }
+        return response;
+    }
+    // ------------------------------
 
     //profileUser
     @GetMapping("/profile")

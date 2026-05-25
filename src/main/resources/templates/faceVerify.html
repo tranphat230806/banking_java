@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Xác thực khuôn mặt | Banking System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: radial-gradient(circle at top left, #1e3a8a 0%, transparent 30%),
+                radial-gradient(circle at bottom right, #0ea5e9 0%, transparent 25%),
+                #0f172a;
+            min-height: 100vh;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(30, 41, 59, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 22px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(8px);
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .title span {
+            color: #38bdf8;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        video {
+            border-radius: 12px;
+            border: 3px solid #38bdf8;
+            width: 100%;
+            max-width: 400px;
+            background: #0f172a;
+        }
+
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 25px;
+            font-weight: bold;
+            font-size: 16px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            margin-top: 15px;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        #statusMsg {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="title">Xác thực <span>FaceID</span></div>
+        <div class="subtitle">Giao dịch của bạn vượt quá hạn mức, vui lòng xác thực khuôn mặt để tiếp tục.</div>
+
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas" style="display:none;"></canvas>
+
+        <div id="statusMsg"></div>
+
+        <button class="btn" onclick="verifyFace()" id="verifyBtn">Xác thực & Chuyển tiền</button>
+        <button class="btn btn-cancel" onclick="window.location.href='/banking'">Hủy giao dịch</button>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const statusMsg = document.getElementById('statusMsg');
+        let stream = null;
+
+        async function initCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            } catch (err) {
+                statusMsg.innerText = "Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.";
+                verifyBtn.disabled = true;
+            }
+        }
+
+        async function verifyFace() {
+            if (!stream) return;
+
+            verifyBtn.disabled = true;
+            verifyBtn.innerText = "Đang xử lý...";
+            statusMsg.innerText = "";
+            statusMsg.style.color = "#38bdf8";
+
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const dataURL = canvas.toDataURL('image/jpeg');
+
+            const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+            try {
+                const response = await fetch('/face-verify/execute', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [header]: token
+                    },
+                    body: JSON.stringify({ image: dataURL })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    statusMsg.style.color = "#22c55e";
+                    statusMsg.innerText = "Xác thực thành công! Đang chuyển hướng...";
+                    setTimeout(() => {
+                        window.location.href = result.redirect;
+                    }, 1000);
+                } else {
+                    statusMsg.style.color = "#ef4444";
+                    statusMsg.innerText = "Lỗi: " + result.message;
+                    verifyBtn.disabled = false;
+                    verifyBtn.innerText = "Thử lại";
+                }
+            } catch (err) {
+                statusMsg.style.color = "#ef4444";
+                statusMsg.innerText = "Đã xảy ra lỗi mạng.";
+                verifyBtn.disabled = false;
+                verifyBtn.innerText = "Thử lại";
+            }
+        }
+
+        // Auto start camera on load
+        window.onload = initCamera;
+    </script>
+
+</body>
+
+</html>

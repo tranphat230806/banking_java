@@ -22,6 +22,28 @@ public class UserClass {
     private String status = "ACTIVE";
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+    
+    @Column(name = "face_registered")
+    private boolean faceRegistered = false;
+    
+    @Column(name = "face_image_path")
+    private String faceImagePath;
+
+    @Column(name = "transfer_pin")
+    private String transferPin;
+
+    @Column(name = "pin_fail_count")
+    private int pinFailCount = 0;
+
+    @Column(name = "transfer_locked")
+    private boolean transferLocked = false;
+
+    @Column(name = "transfer_otp")
+    private String transferOtp;
+
+    @Column(name = "transfer_otp_expiry")
+    private LocalDateTime transferOtpExpiry;
+
 
     public AccountClass getAccounts() {
         return accounts;
@@ -117,4 +139,59 @@ public class UserClass {
         this.status = status;
     }
 
+    public boolean isFaceRegistered() {
+        return faceRegistered;
+    }
+
+    public void setFaceRegistered(boolean faceRegistered) {
+        this.faceRegistered = faceRegistered;
+    }
+
+    public String getFaceImagePath() {
+        return faceImagePath;
+    }
+
+    public void setFaceImagePath(String faceImagePath) {
+        this.faceImagePath = faceImagePath;
+    }
+
+    public String getTransferPin() {
+        return transferPin;
+    }
+
+    public void setTransferPin(String transferPin) {
+        this.transferPin = transferPin;
+    }
+
+    public int getPinFailCount() {
+        return pinFailCount;
+    }
+
+    public void setPinFailCount(int pinFailCount) {
+        this.pinFailCount = pinFailCount;
+    }
+
+    public boolean isTransferLocked() {
+        return transferLocked;
+    }
+
+    public void setTransferLocked(boolean transferLocked) {
+        this.transferLocked = transferLocked;
+    }
+
+    public String getTransferOtp() {
+        return transferOtp;
+    }
+
+    public void setTransferOtp(String transferOtp) {
+        this.transferOtp = transferOtp;
+    }
+
+    public LocalDateTime getTransferOtpExpiry() {
+        return transferOtpExpiry;
+    }
+
+    public void setTransferOtpExpiry(LocalDateTime transferOtpExpiry) {
+        this.transferOtpExpiry = transferOtpExpiry;
+    }
 }

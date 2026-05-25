@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>My Profile | Banking System</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 
     <style>
         * {
@@ -213,6 +215,45 @@
                 font-size: 24px;
             }
         }
+
+        /* FaceID Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        video {
+            border-radius: 8px;
+            border: 2px solid #38bdf8;
+            width: 320px;
+            height: 240px;
+        }
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        .btn:hover { background: #1d4ed8; }
+        .btn-close { background: #ef4444; margin-left: 10px; }
+        .btn-close:hover { background: #dc2626; }
     </style>
 </head>
 <body>
@@ -302,6 +343,22 @@
                     <div class="value" th:text="${account.currency}">VND</div>
                 </div>
 
+                <div class="detail-item wide" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div class="label">FaceID Registration</div>
+                        <div class="value" th:text="${user.faceRegistered ? 'Đã đăng ký' : 'Chưa đăng ký'}" th:style="${user.faceRegistered ? 'color: #22c55e;' : 'color: #ef4444;'}">Chưa đăng ký</div>
+                    </div>
+                    <button class="btn" style="margin: 0;" onclick="openFaceModal()">Đăng ký FaceID</button>
+                </div>
+
+                <div class="detail-item wide" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div class="label">Transfer PIN</div>
+                        <div class="value" th:text="${user.transferPin != null ? 'Đã thiết lập' : 'Chưa thiết lập'}" th:style="${user.transferPin != null ? 'color: #22c55e;' : 'color: #ef4444;'}">Chưa thiết lập</div>
+                    </div>
+                    <button class="btn" style="margin: 0;" onclick="openPinModal()">Thiết lập mã PIN</button>
+                </div>
+
                 <div class="detail-item wide">
                     <div class="label">Security Notice</div>
                     <div class="value">Your account is protected by Banking Security System.</div>
@@ -319,6 +376,131 @@
     </div>
 
 </div>
+
+<!-- FaceID Modal -->
+<div id="faceModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-bottom: 15px; color: #38bdf8;">Đăng ký FaceID</h3>
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas" style="display:none;"></canvas>
+        <br>
+        <button class="btn" onclick="captureFace()">Chụp & Đăng ký</button>
+        <button class="btn btn-close" onclick="closeFaceModal()">Hủy</button>
+        <div id="faceStatus" style="margin-top: 10px; color: #94a3b8;"></div>
+    </div>
+</div>
+
+<!-- PIN Modal -->
+<div id="pinModal" class="modal">
+    <div class="modal-content" style="width: 320px;">
+        <h3 style="margin-bottom: 15px; color: #38bdf8;">Thiết lập mã PIN</h3>
+        <input type="password" id="pinInput" placeholder="Nhập 6 số" maxlength="6" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: none;">
+        <button class="btn" onclick="setupPin()">Lưu PIN</button>
+        <button class="btn btn-close" onclick="closePinModal()">Hủy</button>
+        <div id="pinStatus" style="margin-top: 10px; color: #94a3b8;"></div>
+    </div>
+</div>
+
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const modal = document.getElementById('faceModal');
+    let stream = null;
+
+    async function openFaceModal() {
+        modal.style.display = 'flex';
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+        } catch (err) {
+            alert("Không thể truy cập camera: " + err);
+        }
+    }
+
+    function closeFaceModal() {
+        modal.style.display = 'none';
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+    }
+
+    async function captureFace() {
+        const context = canvas.getContext('2d');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const dataURL = canvas.toDataURL('image/jpeg');
+        document.getElementById('faceStatus').innerText = "Đang xử lý...";
+
+        const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+        try {
+            const response = await fetch('/face/register', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    [header]: token
+                },
+                body: JSON.stringify({ image: dataURL })
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                alert("Đăng ký FaceID thành công!");
+                location.reload();
+            } else {
+                alert("Lỗi: " + result.message);
+                document.getElementById('faceStatus').innerText = "";
+            }
+        } catch (err) {
+            alert("Đã xảy ra lỗi mạng.");
+        }
+    }
+
+    const pinModal = document.getElementById('pinModal');
+    function openPinModal() {
+        pinModal.style.display = 'flex';
+    }
+    function closePinModal() {
+        pinModal.style.display = 'none';
+        document.getElementById('pinInput').value = '';
+        document.getElementById('pinStatus').innerText = '';
+    }
+
+    async function setupPin() {
+        const pin = document.getElementById('pinInput').value;
+        if (!/^\d{6}$/.test(pin)) {
+            document.getElementById('pinStatus').innerText = 'Mã PIN phải gồm 6 chữ số';
+            return;
+        }
+
+        const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+        try {
+            const response = await fetch('/profile/setup-pin', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    [header]: token
+                },
+                body: JSON.stringify({ pin: pin })
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                alert("Thiết lập mã PIN thành công!");
+                location.reload();
+            } else {
+                document.getElementById('pinStatus').innerText = "Lỗi: " + result.message;
+            }
+        } catch (err) {
+            document.getElementById('pinStatus').innerText = "Đã xảy ra lỗi mạng.";
+        }
+    }
+</script>
 
 </body>
 </html>

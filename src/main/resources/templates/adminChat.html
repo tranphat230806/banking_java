@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Support Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        body {
+            background: #0f172a;
+            color: white;
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 300px;
+            background: #1e293b;
+            border-right: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            padding: 20px;
+            background: #2563eb;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .user-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .user-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #334155;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .user-item:hover, .user-item.active {
+            background: #334155;
+        }
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0f172a;
+        }
+        .chat-header {
+            padding: 20px;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            font-weight: bold;
+        }
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .msg {
+            padding: 10px 15px;
+            border-radius: 12px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        .msg.user {
+            background: #334155;
+            align-self: flex-start;
+        }
+        .msg.admin {
+            background: #2563eb;
+            align-self: flex-end;
+        }
+        .input-area {
+            padding: 20px;
+            background: #1e293b;
+            border-top: 1px solid #334155;
+            display: flex;
+            gap: 10px;
+        }
+        .input-area input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            background: #334155;
+            color: white;
+        }
+        .input-area button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="header">👥 Support Queue</div>
+        <div class="user-list" id="userList">
+            <!-- Active chats will appear here -->
+        </div>
+    </div>
+    
+    <div class="chat-area">
+        <div class="chat-header" id="chatHeader">Select a user to chat</div>
+        <div class="messages" id="messagesArea">
+            <!-- Messages -->
+        </div>
+        <div class="input-area">
+            <input type="text" id="adminInput" placeholder="Nhập tin nhắn..." disabled onkeypress="if(event.key === 'Enter') sendAdminMessage()">
+            <button id="sendBtn" disabled onclick="sendAdminMessage()">Gửi</button>
+        </div>
+    </div>
+
+    <script>
+        let stompClient = null;
+        const users = {}; // username -> array of messages
+        let activeUser = null;
+
+        function connect() {
+            const socket = new SockJS('/ws-chat');
+            stompClient = Stomp.over(socket);
+            stompClient.debug = null;
+            stompClient.connect({}, function (frame) {
+                stompClient.subscribe('/topic/admin', function (message) {
+                    const msg = JSON.parse(message.body);
+                    handleIncomingMessage(msg);
+                });
+            });
+        }
+
+        function handleIncomingMessage(msg) {
+            const sender = msg.sender;
+            if (!users[sender]) {
+                users[sender] = [];
+                renderUserList();
+            }
+            users[sender].push(msg);
+            
+            if (activeUser === sender) {
+                renderMessages();
+            } else {
+                // Add unread indicator
+                const userDiv = document.getElementById('user-' + sender);
+                if (userDiv) userDiv.style.fontWeight = 'bold';
+            }
+        }
+
+        function renderUserList() {
+            const list = document.getElementById('userList');
+            list.innerHTML = '';
+            for (const username in users) {
+                const div = document.createElement('div');
+                div.className = 'user-item' + (activeUser === username ? ' active' : '');
+                div.id = 'user-' + username;
+                div.innerText = username;
+                div.onclick = () => selectUser(username);
+                list.appendChild(div);
+            }
+        }
+
+        function selectUser(username) {
+            activeUser = username;
+            document.getElementById('chatHeader').innerText = "Chatting with: " + username;
+            document.getElementById('adminInput').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+            
+            const userDiv = document.getElementById('user-' + username);
+            if (userDiv) userDiv.style.fontWeight = 'normal';
+            
+            renderUserList();
+            renderMessages();
+        }
+
+        function renderMessages() {
+            const area = document.getElementById('messagesArea');
+            area.innerHTML = '';
+            if (!activeUser || !users[activeUser]) return;
+            
+            users[activeUser].forEach(msg => {
+                const div = document.createElement('div');
+                div.className = 'msg ' + (msg.type === 'USER' ? 'user' : 'admin');
+                div.innerText = msg.content;
+                area.appendChild(div);
+            });
+            area.scrollTop = area.scrollHeight;
+        }
+
+        function sendAdminMessage() {
+            if (!activeUser || !stompClient) return;
+            const input = document.getElementById('adminInput');
+            const content = input.value.trim();
+            if (content) {
+                const chatMessage = {
+                    sender: 'Admin',
+                    content: content,
+                    type: 'ADMIN'
+                };
+                
+                // Send directly to the user's specific topic
+                stompClient.send("/topic/user." + activeUser, {}, JSON.stringify(chatMessage));
+                
+                // Save locally to display
+                users[activeUser].push(chatMessage);
+                renderMessages();
+                
+                input.value = '';
+            }
+        }
+
+        window.onload = connect;
+    </script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Xác thực mã PIN | Banking System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: radial-gradient(circle at top left, #1e3a8a 0%, transparent 30%),
+                radial-gradient(circle at bottom right, #0ea5e9 0%, transparent 25%),
+                #0f172a;
+            min-height: 100vh;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(30, 41, 59, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 22px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(8px);
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .title span {
+            color: #38bdf8;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .input-box {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            outline: none;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            letter-spacing: 5px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            margin-top: 15px;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        #statusMsg {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div th:if="${!isLocked}" id="pinSection">
+            <div class="title">Xác thực <span>PIN</span></div>
+            <div class="subtitle">Vui lòng nhập mã PIN chuyển tiền của bạn.</div>
+            <input type="password" id="pinInput" class="input-box" placeholder="******" maxlength="6">
+            <div id="pinStatus" class="statusMsg" style="color: #ef4444; margin-bottom:10px;"></div>
+            <button class="btn" onclick="verifyPin()">Xác nhận</button>
+            <button class="btn btn-cancel" onclick="window.location.href='/banking'">Hủy giao dịch</button>
+        </div>
+
+        <div th:if="${isLocked}" id="otpSection">
+            <div class="title">Tài khoản bị <span>Khóa</span></div>
+            <div class="subtitle">Bạn đã nhập sai PIN nhiều lần. Một mã OTP đã được gửi đến email của bạn để mở khóa.</div>
+            <input type="text" id="otpInput" class="input-box" placeholder="Nhập mã OTP" maxlength="6">
+            <div id="otpStatus" class="statusMsg" style="color: #ef4444; margin-bottom:10px;"></div>
+            <button class="btn" onclick="unlockAccount()">Mở khóa</button>
+            <button class="btn btn-cancel" onclick="window.location.href='/banking'">Hủy giao dịch</button>
+        </div>
+    </div>
+
+    <script>
+        const isLocked = [[${isLocked}]];
+        
+        async function verifyPin() {
+            const pin = document.getElementById('pinInput').value;
+            const statusMsg = document.getElementById('pinStatus');
+            
+            if (!/^\d{6}$/.test(pin)) {
+                statusMsg.innerText = "Vui lòng nhập 6 chữ số PIN.";
+                return;
+            }
+            statusMsg.innerText = "Đang xử lý...";
+            statusMsg.style.color = "#38bdf8";
+
+            const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+            try {
+                const response = await fetch('/transfer/verify-pin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [header]: token
+                    },
+                    body: JSON.stringify({ pin: pin })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    statusMsg.style.color = "#22c55e";
+                    statusMsg.innerText = "Xác thực thành công!";
+                    setTimeout(() => {
+                        window.location.href = result.redirect;
+                    }, 500);
+                } else {
+                    if (result.message === "LOCKED") {
+                        alert("Tài khoản đã bị khóa do nhập sai nhiều lần. Vui lòng kiểm tra email để lấy mã OTP mở khóa.");
+                        location.reload();
+                    } else {
+                        statusMsg.style.color = "#ef4444";
+                        statusMsg.innerText = result.message;
+                    }
+                }
+            } catch (err) {
+                statusMsg.style.color = "#ef4444";
+                statusMsg.innerText = "Lỗi kết nối.";
+            }
+        }
+
+        async function unlockAccount() {
+            const otp = document.getElementById('otpInput').value;
+            const statusMsg = document.getElementById('otpStatus');
+            
+            if (!otp) {
+                statusMsg.innerText = "Vui lòng nhập mã OTP.";
+                return;
+            }
+            statusMsg.innerText = "Đang xử lý...";
+            statusMsg.style.color = "#38bdf8";
+
+            const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+            try {
+                const response = await fetch('/transfer/unlock', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [header]: token
+                    },
+                    body: JSON.stringify({ otp: otp })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert("Mở khóa thành công! Vui lòng thực hiện lại giao dịch.");
+                    window.location.href = '/banking';
+                } else {
+                    statusMsg.style.color = "#ef4444";
+                    statusMsg.innerText = result.message;
+                }
+            } catch (err) {
+                statusMsg.style.color = "#ef4444";
+                statusMsg.innerText = "Lỗi kết nối.";
+            }
+        }
+    </script>
+
+</body>
+
+</html>
