@@ -9,31 +9,36 @@ import com.example.banking.Entity.TransactionsClass;
 import com.example.banking.Entity.UserClass;
 import com.example.banking.Repository.*;
 import com.example.banking.Security.CustomUserDetails;
-import com.example.banking.Service.AccountService;
-import com.example.banking.Service.RegisterService;
-import com.example.banking.Service.ResetService;
-import com.example.banking.Service.FaceIdService;
-import com.example.banking.Service.TransferSecurityService;
+import com.example.banking.Service.*;
 import jakarta.servlet.http.HttpSession;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.Principal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Controller
+@RequiredArgsConstructor
 public class TransectionController {
     @Autowired
     AccountService ser;
@@ -82,6 +87,77 @@ public class TransectionController {
         List<TransactionsClass> transactions = transactionRepository.findTTop5ByFromAccountOrderByCreatedDesc(account);
         model.addAttribute("list", transactions != null ? transactions : Collections.emptyList());
         return "dashboard";
+    }
+
+    // Nếu viết chung vào TransectionController của bạn, hãy thay thế hàm /admin/dashboard cũ bằng đoạn mã này:
+    @GetMapping("/admin/dashboard")
+    public String adminDashboard(Model model, @AuthenticationPrincipal CustomUserDetails adminDetails) {
+        model.addAttribute("adminName", adminDetails.getUsername());
+
+        // 1. Thống kê số lượng User trong hệ thống
+        long totalUsers = userrepo.count();
+        long activeUsers = userrepo.count();
+        long lockedUsers = 0;
+
+        model.addAttribute("totalUsers", totalUsers);
+        model.addAttribute("activeUsers", activeUsers);
+        model.addAttribute("lockedUsers", lockedUsers);
+
+        // 2. Thống kê tổng số tiền giao dịch thực tế trong ngày hôm nay
+        java.math.BigDecimal dailyTotal = java.math.BigDecimal.ZERO;
+        java.time.LocalDate today = java.time.LocalDate.now();
+        List<TransactionsClass> allTransactions = transactionRepository.findAll();
+        for (TransactionsClass t : allTransactions) {
+            if (t.getAmount() != null && t.getCreated() != null) {
+                if (t.getCreated().toLocalDate().isEqual(today)) {
+                    dailyTotal = dailyTotal.add(t.getAmount());
+                }
+            }
+        }
+        model.addAttribute("dailyTotal", dailyTotal);
+
+        // 3. Chuẩn bị mảng dữ liệu doanh thu 12 tháng phát sinh thực tế trong năm nay để vẽ biểu đồ Chart.js
+        List<Long> monthlyChartData = new java.util.ArrayList<>(java.util.Collections.nCopies(12, 0L));
+        int currentYear = java.time.LocalDate.now().getYear();
+        for (TransactionsClass t : allTransactions) {
+            if (t.getAmount() != null && t.getCreated() != null) {
+                if (t.getCreated().getYear() == currentYear) {
+                    int monthIdx = t.getCreated().getMonthValue() - 1; // 0-11
+                    if (monthIdx >= 0 && monthIdx < 12) {
+                        monthlyChartData.set(monthIdx, monthlyChartData.get(monthIdx) + t.getAmount().longValue());
+                    }
+                }
+            }
+        }
+        model.addAttribute("monthlyChartData", monthlyChartData);
+
+        // 4. Lấy danh sách toàn bộ Người dùng trong hệ thống để thực hiện quản lý và gỡ khóa
+        List<UserClass> userList = userrepo.findAll();
+        model.addAttribute("userList", userList);
+
+        return "dashboard_admin"; // Khớp với tên file template của bạn
+    }
+
+    // API xử lý gỡ Lock cho các user bị khóa chức năng chuyển tiền (Tính năng Transfer Lock sẵn có trong code của bạn)
+    @PostMapping("/admin/unlock-user-transfer")
+    @ResponseBody
+    public Map<String, Object> adminUnlockUserTransfer(@RequestParam Long userId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            UserClass user = userrepo.findById(userId).orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+
+            // Gọi service xử lý mở khóa hoặc reset trực tiếp trạng thái lock trong trường hợp khẩn cấp
+            // Ở đây ta dùng trực tiếp phương thức reset cơ chế bảo vệ của bạn
+            user.setTransferLocked(false);
+            userrepo.save(user);
+
+            response.put("success", true);
+            response.put("message", "Gỡ khóa giao dịch thành công cho người dùng " + user.getFullName());
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+        }
+        return response;
     }
 
     //Transection
@@ -133,7 +209,7 @@ public class TransectionController {
                                         BillDTO billdto, Model model, HttpSession session) {
         try {
             UserClass user = userrepo.findByUsername(userDetails.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
-            
+
             // Check if PIN is set up
             if (!transferSecurityService.isPinSetup(user)) {
                 model.addAttribute("message", "Bạn chưa thiết lập mã PIN chuyển tiền. Vui lòng thiết lập trong Profile.");
@@ -186,7 +262,7 @@ public class TransectionController {
             if (isVerified) {
                 TransectionDTO pendingTransfer = (TransectionDTO) session.getAttribute("pendingTransfer");
                 BillDTO pendingBill = (BillDTO) session.getAttribute("pendingBill");
-                
+
                 if (pendingTransfer != null) {
                     BillClass bill = ser.transferMoney(pendingTransfer, userDetails, pendingBill);
                     session.removeAttribute("pendingTransfer");
@@ -208,6 +284,60 @@ public class TransectionController {
         return response;
     }
     // ------------------------
+
+    @PostMapping("/profile/upload-avatar")
+    public String uploadAvatar(@RequestParam("avatar") MultipartFile file,
+                               Principal principal,
+                               RedirectAttributes redirectAttributes) {
+
+        try {
+            String username = principal.getName();
+
+            // 1. validate file rỗng
+            if (file == null || file.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Vui lòng chọn ảnh.");
+                return "redirect:/profile";
+            }
+
+            // 2. check loại file (QUAN TRỌNG)
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                redirectAttributes.addFlashAttribute("error", "Chỉ được upload file ảnh.");
+                return "redirect:/profile";
+            }
+
+            // 3. tạo tên file an toàn hơn
+            String originalName = file.getOriginalFilename();
+            String extension = originalName != null && originalName.contains(".")
+                    ? originalName.substring(originalName.lastIndexOf("."))
+                    : ".jpg";
+
+            String filename = username + "_" + System.currentTimeMillis() + extension;
+
+            // 4. tạo folder nếu chưa có
+            Path uploadPath = Paths.get("uploads/avatars");
+            Files.createDirectories(uploadPath);
+
+            // 5. lưu file
+            Path filePath = uploadPath.resolve(filename);
+            file.transferTo(filePath.toFile());
+
+            // 6. update DB
+            UserClass user = userrepo.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            user.setAvatar("/uploads/avatars/" + filename);
+            userrepo.save(user);
+
+            redirectAttributes.addFlashAttribute("success", "Cập nhật avatar thành công!");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", "Upload thất bại!");
+        }
+
+        return "redirect:/profile";
+    }
 
     // --- Transfer PIN Endpoints ---
     @PostMapping("/profile/setup-pin")
@@ -469,4 +599,34 @@ public class TransectionController {
         return out.toByteArray();
     }
 
+    // --- Admin Face Verify Endpoints ---
+    @GetMapping("/admin/face-verify")
+    public String adminFaceVerifyPage() {
+        return "adminFaceVerify";
+    }
+
+    @PostMapping("/admin/face-verify/execute")
+    @ResponseBody
+    public Map<String, Object> executeAdminFaceVerify(@RequestBody Map<String, String> body, @AuthenticationPrincipal CustomUserDetails userDetails, HttpSession session, jakarta.servlet.http.HttpServletRequest request) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            UserClass user = userrepo.findByUsername(userDetails.getUsername()).orElseThrow();
+            boolean isVerified = faceIdService.verifyFace(user, body.get("image"));
+
+            if (isVerified) {
+                session.setAttribute("admin_face_verified", true);
+                response.put("success", true);
+                response.put("redirect", "/admin/dashboard");
+            } else {
+                request.logout(); // Invalidate security context
+                session.invalidate();
+                response.put("success", false);
+                response.put("message", "Xác thực khuôn mặt thất bại.");
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+        }
+        return response;
+    }
 }

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Xác thực khuôn mặt | Banking System</title>
+    <title>Xác thực Admin FaceID | Banking System</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="_csrf" th:content="${_csrf.token}" />
     <meta name="_csrf_header" th:content="${_csrf.headerName}" />
@@ -103,16 +103,16 @@
 <body>
 
     <div class="container">
-        <div class="title">Xác thực <span>FaceID</span></div>
-        <div class="subtitle">Giao dịch của bạn vượt quá hạn mức, vui lòng xác thực khuôn mặt để tiếp tục.</div>
+        <div class="title">Xác thực <span>Admin FaceID</span></div>
+        <div class="subtitle">Bảo mật yêu cầu xác thực khuôn mặt để truy cập trang quản trị.</div>
 
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas" style="display:none;"></canvas>
 
         <div id="statusMsg"></div>
 
-        <button class="btn" onclick="verifyFace()" id="verifyBtn">Xác thực & Chuyển tiền</button>
-        <button class="btn btn-cancel" onclick="window.location.href='/banking'">Hủy giao dịch</button>
+        <button class="btn" onclick="verifyFace()" id="verifyBtn">Xác thực</button>
+        <button class="btn btn-cancel" onclick="window.location.href='/login?logout'">Hủy (Đăng xuất)</button>
     </div>
 
     <script>
@@ -157,7 +157,7 @@
             const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
             try {
-                const response = await fetch('/face-verify/execute', {
+                const response = await fetch('/admin/face-verify/execute', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -175,9 +175,11 @@
                     }, 1000);
                 } else {
                     statusMsg.style.color = "#ef4444";
-                    statusMsg.innerText = "Lỗi: " + result.message;
-                    verifyBtn.disabled = false;
-                    verifyBtn.innerText = "Thử lại";
+                    statusMsg.innerText = "Lỗi: " + result.message + " Bạn sẽ bị đăng xuất.";
+                    verifyBtn.disabled = true;
+                    setTimeout(() => {
+                        window.location.href = '/login?error=faceid';
+                    }, 2000);
                 }
             } catch (err) {
                 statusMsg.style.color = "#ef4444";

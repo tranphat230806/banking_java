@@ -63,7 +63,7 @@ public class AccountService {
         }
 
         // 7. Check số dư
-        if (request.getAmount().compareTo(BigDecimal.valueOf(2)) <= 0) {
+        if (request.getAmount().compareTo(BigDecimal.valueOf(2000)) <= 0) {
             throw new RuntimeException("Số tiền chuyển tối thiểu 2.000d");
         }
         if (request.getAmount().compareTo(fromAcc.getBalance()) > 0) {

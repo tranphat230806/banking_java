@@ -286,12 +286,6 @@
                 <img th:src="${user.avatar}" alt="avatar">
                 <div class="status-dot"></div>
             </div>
-            <form th:action="@{/profile/upload-avatar}" method="post" enctype="multipart/form-data"
-                  style="margin-top:15px;">
-                <input type="file" name="avatar" accept="image/*" required>
-                <input type="hidden" name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                <button type="submit" class="btn">Cập nhật Avatar</button>
-            </form>
 
             <div class="name" th:text="${user.fullName}">Trần Văn Phát</div>
             <div class="username" th:text="'@' + ${user.username}">@phat</div>

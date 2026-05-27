@@ -64,13 +64,14 @@ public class ChatController {
 
     @MessageMapping("/chat.adminReply")
     public void adminReply(@Payload ChatMessageDTO chatMessage) {
-        // Admin's reply will have the target user in the 'sender' field (or we can assume content has a specific format, but let's assume sender is the target user for simplicity here, wait no, let's just send it to a topic based on a specific format. Wait, let's add a target field to ChatMessageDTO? No, minimal changes. We can just use the target username from the frontend and send directly to /topic/user.{target})
-        // For simplicity, let's assume the frontend sends the target username in a specific way, or we can just broadcast to /topic/public for now. But requirement says "realtime admin-user chat".
-        // Let's modify: admin sends to /topic/user.{targetUsername} directly via frontend, or we handle it here.
-        // If frontend sends it here, we expect `chatMessage.getSender()` to be "Admin", but we need the target.
-        // Let's just use SimpMessagingTemplate from the frontend or have the admin append the username.
-        // Actually, the easiest way is for Admin to send messages to `/app/chat.adminReply` and put the target username in the sender field temporarily, or just let frontend send directly to `/topic/user.target`. 
-        // We will just let the admin frontend send to `/topic/user.{targetUsername}` directly.
+        // Broadcast the admin's reply to the specific target user's topic
+        messagingTemplate.convertAndSend("/topic/user." + chatMessage.getTargetUser(), chatMessage);
+    }
+
+    @MessageMapping("/chat.adminBroadcast")
+    public void adminBroadcast(@Payload ChatMessageDTO chatMessage) {
+        // Broadcast the admin's message to all users
+        messagingTemplate.convertAndSend("/topic/broadcast", chatMessage);
     }
 
     @GetMapping("/admin/chat")

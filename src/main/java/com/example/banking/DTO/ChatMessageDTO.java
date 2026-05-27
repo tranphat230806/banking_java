@@ -4,6 +4,7 @@ public class ChatMessageDTO {
     private String sender;
     private String content;
     private MessageType type;
+    private String targetUser;
 
     public enum MessageType {
         USER, BOT, ADMIN, CONNECT, DISCONNECT
@@ -39,5 +40,13 @@ public class ChatMessageDTO {
 
     public void setType(MessageType type) {
         this.type = type;
+    }
+
+    public String getTargetUser() {
+        return targetUser;
+    }
+
+    public void setTargetUser(String targetUser) {
+        this.targetUser = targetUser;
     }
 }

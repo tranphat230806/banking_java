@@ -319,7 +319,7 @@
 <body>
 
 <div class="sidebar">
-    <div class="logo">💳 TranPhatBank</div>
+    <div class="logo">💳 BATLBANK</div>
 
     <div class="menu">
         <a th:href="@{/dashboard}">🏠 Dashboard</a>
@@ -447,20 +447,28 @@
 </div>
 
 <!-- Chat Widget -->
-<div id="chatWidget" style="position: fixed; bottom: 20px; right: 20px; width: 300px; background: #1e293b; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
-    <div style="background: #2563eb; padding: 12px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between;" onclick="toggleChat()">
+<div id="chatWidget"
+     style="position: fixed; bottom: 20px; right: 20px; width: 300px; background: #1e293b; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+    <div style="background: #2563eb; padding: 12px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between;"
+         onclick="toggleChat()">
         <span>💬 Hỗ trợ trực tuyến</span>
         <span id="chatToggleIcon">▲</span>
     </div>
     <div id="chatBody" style="display: none; flex-direction: column; height: 350px;">
-        <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; font-size: 14px;">
+        <div id="chatMessages"
+             style="flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; font-size: 14px;">
             <div style="background: #334155; padding: 8px 12px; border-radius: 12px; align-self: flex-start; max-width: 85%;">
                 Chào bạn! Tôi có thể giúp gì cho bạn?
             </div>
         </div>
         <div style="padding: 10px; background: rgba(0,0,0,0.2); display: flex; gap: 8px;">
-            <input type="text" id="chatInput" placeholder="Nhập tin nhắn..." style="flex: 1; padding: 8px; border-radius: 8px; border: none; outline: none; background: #334155; color: white;" onkeypress="if(event.key === 'Enter') sendChatMessage()">
-            <button onclick="sendChatMessage()" style="background: #2563eb; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer;">Gửi</button>
+            <input type="text" id="chatInput" placeholder="Nhập tin nhắn..."
+                   style="flex: 1; padding: 8px; border-radius: 8px; border: none; outline: none; background: #334155; color: white;"
+                   onkeypress="if(event.key === 'Enter') sendChatMessage()">
+            <button onclick="sendChatMessage()"
+                    style="background: #2563eb; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer;">
+                Gửi
+            </button>
         </div>
     </div>
 </div>
@@ -477,6 +485,12 @@
             stompClient.subscribe('/topic/user.' + currentUsername, function (message) {
                 const msg = JSON.parse(message.body);
                 showChatMessage(msg.content, false);
+            });
+            
+            // Subscribe to broadcast messages
+            stompClient.subscribe('/topic/broadcast', function (message) {
+                const msg = JSON.parse(message.body);
+                showChatMessage("📢 THÔNG BÁO: " + msg.content, false);
             });
         });
     }
@@ -516,7 +530,7 @@
         div.style.borderRadius = '12px';
         div.style.maxWidth = '85%';
         div.style.wordWrap = 'break-word';
-        
+
         if (isSelf) {
             div.style.background = '#2563eb';
             div.style.alignSelf = 'flex-end';
@@ -524,7 +538,7 @@
             div.style.background = '#334155';
             div.style.alignSelf = 'flex-start';
         }
-        
+
         div.innerText = message;
         msgs.appendChild(div);
         msgs.scrollTop = msgs.scrollHeight;

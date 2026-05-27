@@ -167,7 +167,7 @@
         <p>Chuyển tiền nhanh chóng & an toàn</p>
     </div>
 
-    <form th:action="@{/banking}" method="post">
+    <form id="transferForm" th:action="@{/banking}" method="post">
 
         <div class="group">
             <label>Chủ Tài Khoản</label>
@@ -225,11 +225,17 @@
 
     <div id="reader"></div>
 
-    <div class="message" th:if="${message}">
-        <p th:text="${message}"></p>
-    </div>
-    <div class="message">
-        <a href="/dashboard" class="btn">Về trang chủ</a>
+    <script th:if="${message}">
+        // Detect success based on message content or add your logic. 
+        // For simplicity, we just show it as an info toast or parse success manually.
+        window.addEventListener('DOMContentLoaded', () => {
+            let msg = '[[${message}]]';
+            let type = msg.toLowerCase().includes('thành công') ? 'success' : 'error';
+            showToast(msg, type);
+        });
+    </script>
+    <div class="message" style="background: transparent; border: none;">
+        <a href="/dashboard" class="btn" style="color: #60a5fa; text-decoration: none;">← Về trang chủ</a>
     </div>
 
     <div class="footer">
@@ -239,8 +245,16 @@
 </div>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
+<script src="/js/toast.js"></script>
 
 <script>
+    document.getElementById('transferForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        showConfirm('Xác nhận thực hiện giao dịch chuyển tiền?', () => {
+            this.submit();
+        });
+    });
+
     window.onload = function () {
         const qrData = sessionStorage.getItem('qrData');
         if (qrData) {

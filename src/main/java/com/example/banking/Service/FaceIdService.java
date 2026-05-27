@@ -75,9 +75,10 @@ public class FaceIdService {
         
         Core.MinMaxLocResult mmr = Core.minMaxLoc(result);
         double similarity = mmr.maxVal; // 1.0 is a perfect match
+        System.out.println(">>> FaceID Verify - User: " + user.getUsername() + " - Similarity score: " + similarity);
 
         // Threshold for face match (adjustable)
-        return similarity > 0.6;
+        return similarity > 0.55; // Slightly lower threshold for better UX with template matching
     }
 
     private Mat extractFace(String base64Image) {
