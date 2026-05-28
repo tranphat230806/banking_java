@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 public class ChatController {
@@ -28,8 +32,28 @@ public class ChatController {
         BOT_QA.put("pin", "Bạn có thể thiết lập mã PIN chuyển tiền trong mục Profile.");
     }
 
+    // In-memory chat history for the current Admin session
+    private static final Map<String, List<ChatMessageDTO>> chatHistory = new ConcurrentHashMap<>();
+
+    public static void addMessageToHistory(String targetUsername, ChatMessageDTO msg) {
+        chatHistory.computeIfAbsent(targetUsername, k -> new ArrayList<>()).add(msg);
+    }
+
+    public static void clearChatHistory() {
+        chatHistory.clear();
+    }
+
+    @GetMapping("/admin/chat/history")
+    @ResponseBody
+    public Map<String, List<ChatMessageDTO>> getChatHistory() {
+        return chatHistory;
+    }
+
     @MessageMapping("/chat.sendMessage")
     public void receiveMessage(@Payload ChatMessageDTO chatMessage) {
+        // Save to history
+        addMessageToHistory(chatMessage.getSender(), chatMessage);
+
         // Broadcast the user's message to the admin queue
         messagingTemplate.convertAndSend("/topic/admin", chatMessage);
 
@@ -64,6 +88,9 @@ public class ChatController {
 
     @MessageMapping("/chat.adminReply")
     public void adminReply(@Payload ChatMessageDTO chatMessage) {
+        // Save to history
+        addMessageToHistory(chatMessage.getTargetUser(), chatMessage);
+        
         // Broadcast the admin's reply to the specific target user's topic
         messagingTemplate.convertAndSend("/topic/user." + chatMessage.getTargetUser(), chatMessage);
     }
