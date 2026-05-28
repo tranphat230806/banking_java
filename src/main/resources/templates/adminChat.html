@@ -163,13 +163,21 @@
 </head>
 <body>
 <div class="sidebar">
-    <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
-        <span>👥 Support Queue</span>
-        <a href="/admin/dashboard" style="color: #60a5fa; text-decoration: none; font-size: 14px; font-weight: normal;">← Về trang chủ</a>
+    <div class="header" style="display: flex; flex-direction: column; gap: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span><i class="fas fa-headset"></i> Support Queue</span>
+            <a href="/admin/dashboard" style="color: #60a5fa; text-decoration: none; font-size: 14px; font-weight: normal; transition: 0.3s;"><i class="fas fa-arrow-left"></i> Home</a>
+        </div>
+        <div style="position: relative;">
+            <input type="text" id="searchInput" placeholder="Tìm kiếm người dùng..." 
+                   style="width: 100%; padding: 10px 10px 10px 35px; border-radius: 8px; border: none; background: #334155; color: white; outline: none;"
+                   onkeyup="filterUsers()">
+            <i class="fas fa-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+        </div>
     </div>
     <div class="user-list" id="userList">
         <div class="user-item" id="user-BROADCAST" onclick="selectUser('BROADCAST')">
-            📢 Phát sóng (Tất cả)
+            <span><i class="fas fa-bullhorn" style="margin-right: 8px; color: #fbbf24;"></i> Phát sóng (Tất cả)</span>
         </div>
       <div class="user-item" style="background: transparent; border: none;">
             <a href="/dashboard" class="btn" style="color: #60a5fa; text-decoration: none;">← Về trang chủ</a>
@@ -178,8 +186,18 @@
 </div>
 
 <div class="chat-area">
-    <div class="chat-header" id="chatHeader">Select a user to chat</div>
-    <div class="messages" id="messagesArea">
+    <div class="chat-header" id="chatHeader">
+        <div style="display: flex; align-items: center; gap: 10px; color: #94a3b8;">
+            <i class="fas fa-comments" style="font-size: 1.5rem;"></i>
+            <span>Vui lòng chọn người dùng để chat</span>
+        </div>
+    </div>
+    <div class="messages" id="messagesArea" style="justify-content: center; align-items: center; color: #64748b; font-size: 1.2rem;">
+        <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 15px; opacity: 0.5;">
+            <i class="fas fa-inbox" style="font-size: 4rem;"></i>
+            <p>Hộp thư hỗ trợ trực tuyến</p>
+        </div>
+    </div>
         <!-- Messages -->
     </div>
     <div class="input-area">
@@ -204,8 +222,23 @@
                 const msg = JSON.parse(message.body);
                 handleIncomingMessage(msg);
             });
+        }, function(error) {
+            console.error("Lỗi mất kết nối WebSocket, đang thử lại...", error);
+            setTimeout(connect, 5000); // Tự động reconnect sau 5s
+        });
+    }
 
-            // Admin also needs to see their own broadcast locally or we can just append it manually
+    function filterUsers() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const items = document.querySelectorAll('.user-item');
+        items.forEach(item => {
+            if (item.id === 'user-BROADCAST') return; // Always show broadcast
+            const text = item.innerText.toLowerCase();
+            if (text.includes(query)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
         });
     }
 
@@ -271,19 +304,34 @@
 
     function selectUser(username) {
         activeUser = username;
-        document.getElementById('chatHeader').innerText = "Chatting with: " + username;
+        document.getElementById('chatHeader').innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-user-circle" style="font-size: 1.5rem; color: #60a5fa;"></i>
+                <span style="font-weight: bold; font-size: 1.1rem;">${username === 'BROADCAST' ? 'Kênh Phát Sóng (Tất cả Users)' : username}</span>
+            </div>
+        `;
         document.getElementById('adminInput').disabled = false;
         document.getElementById('sendBtn').disabled = false;
+        document.getElementById('adminInput').focus();
 
-        unreadCounts[username] = 0;
+        if (username !== 'BROADCAST') unreadCounts[username] = 0;
         renderUserList();
         renderMessages();
     }
 
     function renderMessages() {
         const area = document.getElementById('messagesArea');
+        area.style.justifyContent = 'flex-start';
+        area.style.alignItems = 'stretch';
         area.innerHTML = '';
-        if (!activeUser || !users[activeUser]) return;
+        if (!activeUser || !users[activeUser]) {
+            if (activeUser && (!users[activeUser] || users[activeUser].length === 0)) {
+                area.style.justifyContent = 'center';
+                area.style.alignItems = 'center';
+                area.innerHTML = `<div style="opacity: 0.5; color: #94a3b8;"><i class="fas fa-comment-dots" style="font-size: 2rem; display: block; text-align: center; margin-bottom: 10px;"></i> Chưa có tin nhắn nào</div>`;
+            }
+            return;
+        }
 
         users[activeUser].forEach(msg => {
             const div = document.createElement('div');
@@ -330,7 +378,10 @@
             // Save locally to display
             if (!users[activeUser]) users[activeUser] = [];
             users[activeUser].push(chatMessage);
-            appendMessage(chatMessage);
+            
+            // Re-render empty state to normal if it's the first message
+            if (users[activeUser].length === 1) renderMessages();
+            else appendMessage(chatMessage);
 
             input.value = '';
         }

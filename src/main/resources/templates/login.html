@@ -94,11 +94,14 @@
     <!-- Hiển thị thông báo lỗi nếu có -->
     <div th:if="${param.error}" style="margin-bottom: 20px; padding: 10px; background-color: #fee2e2; color: #dc2626; border: 1px solid #f87171; border-radius: 8px; font-size: 14px;">
         <span th:text="${session['SPRING_SECURITY_LAST_EXCEPTION'] != null ? 
-            (session['SPRING_SECURITY_LAST_EXCEPTION'].message.contains('Maximum sessions') ? 
-                'Tài khoản này đang được đăng nhập ở thiết bị khác!' : 
-                'Tài khoản hoặc mật khẩu không chính xác!') 
+            'Tài khoản hoặc mật khẩu không chính xác!' 
             : 'Đăng nhập thất bại, vui lòng thử lại!'}">
         </span>
+    </div>
+
+    <!-- Hiển thị thông báo bị đá do đăng nhập nơi khác -->
+    <div th:if="${param.expired}" style="margin-bottom: 20px; padding: 10px; background-color: #fef08a; color: #854d0e; border: 1px solid #eab308; border-radius: 8px; font-size: 14px;">
+        Phiên đăng nhập đã hết hạn hoặc tài khoản vừa được đăng nhập ở một thiết bị khác!
     </div>
 
     <!-- Hiển thị thông báo đăng xuất -->
