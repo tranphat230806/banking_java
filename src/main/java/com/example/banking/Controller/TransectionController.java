@@ -109,18 +109,26 @@ public class TransectionController {
         model.addAttribute("activeUsers", activeUsers);
         model.addAttribute("lockedUsers", lockedUsers);
 
-        // 2. Thống kê tổng số tiền giao dịch trong ngày
+        // 2. Thống kê tổng số tiền giao dịch trong ngày và biểu đồ 24h
         java.math.BigDecimal dailyTotal = java.math.BigDecimal.ZERO;
         java.time.LocalDate today = java.time.LocalDate.now();
         List<TransactionsClass> allTransactions = transactionRepository.findAll();
+        
+        List<Long> dailyChartData = new java.util.ArrayList<>(java.util.Collections.nCopies(24, 0L));
+        
         for (TransactionsClass t : allTransactions) {
             if (t.getAmount() != null && t.getCreated() != null) {
                 if (t.getCreated().toLocalDate().isEqual(today)) {
                     dailyTotal = dailyTotal.add(t.getAmount());
+                    int hour = t.getCreated().getHour();
+                    if (hour >= 0 && hour < 24) {
+                        dailyChartData.set(hour, dailyChartData.get(hour) + t.getAmount().longValue());
+                    }
                 }
             }
         }
         model.addAttribute("dailyTotal", dailyTotal);
+        model.addAttribute("dailyChartData", dailyChartData);
 
         // 3. Dữ liệu biểu đồ 12 tháng
         List<Long> monthlyChartData = new java.util.ArrayList<>(java.util.Collections.nCopies(12, 0L));
