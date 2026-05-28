@@ -492,13 +492,16 @@ public class TransectionController {
 
             // Kiểm tra xem username đã tồn tại chưa
             if (createser.isUsernameTaken(dto.getUsername())) {
-                model.addAttribute("error", "Code đã tồn tại!!!!");
+                model.addAttribute("error", "Tên đăng nhập đã tồn tại, vui lòng chọn tên khác!");
                 return "formCreate";  // Trả về trang tạo tài khoản nếu có lỗi
             }
             // Gọi service để tạo user và tài khoản
             createser.registerUser(dto);
             model.addAttribute("success", "Bạn đã đăng kí thành công!!!");
             return "redirect:/login";  // Redirect đến trang login sau khi đăng ký thành công
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+            return "formCreate";
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("error", "Đã có lỗi xảy ra, vui lòng thử lại.");

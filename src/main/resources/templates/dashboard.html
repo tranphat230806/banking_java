@@ -451,7 +451,10 @@
      style="position: fixed; bottom: 20px; right: 20px; width: 300px; background: #1e293b; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
     <div style="background: #2563eb; padding: 12px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between;"
          onclick="toggleChat()">
-        <span>💬 Hỗ trợ trực tuyến</span>
+        <span>
+            💬 Hỗ trợ trực tuyến
+            <span id="chatUnreadBadge" style="display: none; background: #ef4444; color: white; border-radius: 9999px; padding: 2px 6px; font-size: 11px; margin-left: 8px;">0</span>
+        </span>
         <span id="chatToggleIcon">▲</span>
     </div>
     <div id="chatBody" style="display: none; flex-direction: column; height: 350px;">
@@ -485,28 +488,49 @@
             stompClient.subscribe('/topic/user.' + currentUsername, function (message) {
                 const msg = JSON.parse(message.body);
                 showChatMessage(msg.content, false);
+                notifyNewMessage();
             });
             
-            // Subscribe to broadcast messages
             stompClient.subscribe('/topic/broadcast', function (message) {
                 const msg = JSON.parse(message.body);
                 showChatMessage("📢 THÔNG BÁO: " + msg.content, false);
+                notifyNewMessage();
             });
         });
     }
 
+    let unreadCount = 0;
+
     function toggleChat() {
         const body = document.getElementById('chatBody');
         const icon = document.getElementById('chatToggleIcon');
+        const badge = document.getElementById('chatUnreadBadge');
         if (body.style.display === 'none') {
             body.style.display = 'flex';
             icon.innerText = '▼';
-            if (!stompClient) connectChat();
+            // Reset unread
+            unreadCount = 0;
+            badge.style.display = 'none';
         } else {
             body.style.display = 'none';
             icon.innerText = '▲';
         }
     }
+
+    function notifyNewMessage() {
+        const body = document.getElementById('chatBody');
+        if (body.style.display === 'none') {
+            unreadCount++;
+            const badge = document.getElementById('chatUnreadBadge');
+            badge.innerText = unreadCount;
+            badge.style.display = 'inline-block';
+        }
+    }
+
+    // Auto connect on load
+    window.addEventListener('DOMContentLoaded', () => {
+        if (!stompClient) connectChat();
+    });
 
     function sendChatMessage() {
         const input = document.getElementById('chatInput');
