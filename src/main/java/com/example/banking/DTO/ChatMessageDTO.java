@@ -7,7 +7,7 @@ public class ChatMessageDTO {
     private String targetUser;
 
     public enum MessageType {
-        USER, BOT, ADMIN, CONNECT, DISCONNECT
+        USER, BOT, ADMIN, CONNECT, DISCONNECT, NOTIFICATION
     }
 
     public ChatMessageDTO() {}

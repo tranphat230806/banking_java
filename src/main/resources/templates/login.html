@@ -91,6 +91,21 @@
 <div class="login-container">
     <h2>Login Bank</h2>
 
+    <!-- Hiển thị thông báo lỗi nếu có -->
+    <div th:if="${param.error}" style="margin-bottom: 20px; padding: 10px; background-color: #fee2e2; color: #dc2626; border: 1px solid #f87171; border-radius: 8px; font-size: 14px;">
+        <span th:text="${session['SPRING_SECURITY_LAST_EXCEPTION'] != null ? 
+            (session['SPRING_SECURITY_LAST_EXCEPTION'].message.contains('Maximum sessions') ? 
+                'Tài khoản này đang được đăng nhập ở thiết bị khác!' : 
+                'Tài khoản hoặc mật khẩu không chính xác!') 
+            : 'Đăng nhập thất bại, vui lòng thử lại!'}">
+        </span>
+    </div>
+
+    <!-- Hiển thị thông báo đăng xuất -->
+    <div th:if="${param.logout}" style="margin-bottom: 20px; padding: 10px; background-color: #dcfce7; color: #16a34a; border: 1px solid #4ade80; border-radius: 8px; font-size: 14px;">
+        Đã đăng xuất thành công.
+    </div>
+
     <form th:action="@{/login}" method="post">
 
         <div class="input-group">

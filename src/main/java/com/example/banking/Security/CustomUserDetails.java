@@ -113,4 +113,17 @@ public class CustomUserDetails implements UserDetails {
     public boolean isEnabled() {
         return "ACTIVE".equals(status);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CustomUserDetails that = (CustomUserDetails) o;
+        return username != null ? username.equals(that.username) : that.username == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return username != null ? username.hashCode() : 0;
+    }
 }
