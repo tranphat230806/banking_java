@@ -673,8 +673,11 @@
             stompClient = Stomp.over(socket);
             stompClient.debug = null; // disable debug logs
             stompClient.connect({}, function (frame) {
+                console.log('Connected to WebSocket');
                 stompClient.subscribe('/topic/user.' + currentUsername, function (message) {
                     const msg = JSON.parse(message.body);
+                    console.log('Nhận được tin nhắn qua WebSocket:', msg);
+                    
                     if (msg.type === 'NOTIFICATION') {
                         showGlobalNotification(msg.content);
                     } else {
