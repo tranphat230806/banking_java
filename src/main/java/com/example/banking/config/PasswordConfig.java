@@ -9,6 +9,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.Authentication;
 
 @Configuration
 @EnableWebSecurity
@@ -55,6 +59,14 @@ public class PasswordConfig {
                         .invalidateHttpSession(true)       // Xóa toàn bộ session (bao gồm admin_face_verified)
                         .clearAuthentication(true)         // Xóa SecurityContext
                         .deleteCookies("JSESSIONID")       // Xóa cookie session trên browser
+                        .addLogoutHandler(new LogoutHandler() {
+                            @Override
+                            public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+                                if (authentication != null && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"))) {
+                                    com.example.banking.Controller.ChatController.clearChatHistory();
+                                }
+                            }
+                        })
                         .permitAll()
                 );
 

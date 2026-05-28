@@ -123,13 +123,13 @@
 </head>
 <body>
 <div class="sidebar">
-    <div class="header">👥 Support Queue</div>
+    <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>👥 Support Queue</span>
+        <a href="/admin/dashboard" style="color: #60a5fa; text-decoration: none; font-size: 14px; font-weight: normal;">← Về trang chủ</a>
+    </div>
     <div class="user-list" id="userList">
         <div class="user-item" id="user-BROADCAST" onclick="selectUser('BROADCAST')">
             📢 Phát sóng (Tất cả)
-        </div>
-        <div class="user-item" style="background: transparent; border: none;">
-            <a href="/dashboard" class="btn" style="color: #60a5fa; text-decoration: none;">← Về trang chủ</a>
         </div>
         <!-- Active chats will appear here -->
     </div>
@@ -175,7 +175,7 @@
         users[sender].push(msg);
 
         if (activeUser === sender) {
-            renderMessages();
+            appendMessage(msg);
         } else {
             // Add unread indicator
             const userDiv = document.getElementById('user-' + sender);
@@ -233,6 +233,19 @@
         area.scrollTop = area.scrollHeight;
     }
 
+    function appendMessage(msg) {
+        const area = document.getElementById('messagesArea');
+        const div = document.createElement('div');
+        div.className = 'msg ' + (msg.type === 'USER' ? 'user' : 'admin');
+        div.innerText = msg.content;
+        area.appendChild(div);
+        
+        area.scrollTo({
+            top: area.scrollHeight,
+            behavior: 'smooth'
+        });
+    }
+
     function sendAdminMessage() {
         if (!activeUser || !stompClient) return;
         const input = document.getElementById('adminInput');
@@ -256,13 +269,34 @@
             // Save locally to display
             if (!users[activeUser]) users[activeUser] = [];
             users[activeUser].push(chatMessage);
-            renderMessages();
+            appendMessage(chatMessage);
 
             input.value = '';
         }
     }
 
-    window.onload = connect;
+    async function loadHistory() {
+        try {
+            const res = await fetch('/admin/chat/history');
+            if (res.ok) {
+                const history = await res.json();
+                for (const targetUser in history) {
+                    if (!users[targetUser]) users[targetUser] = [];
+                    history[targetUser].forEach(msg => {
+                        users[targetUser].push(msg);
+                    });
+                }
+                renderUserList();
+            }
+        } catch (e) {
+            console.error("Lỗi tải lịch sử chat", e);
+        }
+    }
+
+    window.onload = function() {
+        connect();
+        loadHistory();
+    };
 </script>
 </body>
 </html>

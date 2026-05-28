@@ -13,8 +13,10 @@ import com.example.banking.Repository.UserRepository;
 import com.example.banking.Security.CustomUserDetails;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.example.banking.DTO.ChatMessageDTO;
 import com.example.banking.Entity.TransactionsClass;
 
 import java.math.BigDecimal;
@@ -35,6 +37,9 @@ public class AccountService {
 
     @Autowired
     UserRepository userrepo;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
     @Transactional
 
@@ -98,6 +103,25 @@ public class AccountService {
         bill.setDescription(billDTO.getDescription());
 
         billrepo.save(bill);
+
+        // 11. Send WebSocket Notifications
+        try {
+            // Notify Sender
+            ChatMessageDTO senderMsg = new ChatMessageDTO("System", 
+                    "💸 Chuyển khoản thành công " + request.getAmount() + " VND tới tài khoản " + toAcc.getCode() + ".", 
+                    ChatMessageDTO.MessageType.BOT);
+            messagingTemplate.convertAndSend("/topic/user." + username, senderMsg);
+
+            // Notify Receiver
+            if (toAcc.getUser() != null) {
+                ChatMessageDTO receiverMsg = new ChatMessageDTO("System", 
+                        "💰 Bạn vừa nhận được " + request.getAmount() + " VND từ " + userEntity.getFullName() + ". Nội dung: " + request.getDescription(), 
+                        ChatMessageDTO.MessageType.BOT);
+                messagingTemplate.convertAndSend("/topic/user." + toAcc.getUser().getUsername(), receiverMsg);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         return bill;
     }
