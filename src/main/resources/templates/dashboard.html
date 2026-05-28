@@ -10,7 +10,7 @@
 
     <!-- Kiểm soát chỉ 1 tab trình duyệt một lúc -->
     <script>
-        (function() {
+        (function () {
             // Kiểm tra hỗ trợ BroadcastChannel
             if (typeof BroadcastChannel !== 'undefined') {
                 const tabChannel = new BroadcastChannel('banking_tab_control');
@@ -19,7 +19,7 @@
                 // Khi tab này mở, báo cho các tab khác
                 tabChannel.postMessage({ type: 'new_tab', tabId: TAB_ID });
 
-                tabChannel.onmessage = function(event) {
+                tabChannel.onmessage = function (event) {
                     if (event.data.type === 'new_tab' && event.data.tabId !== TAB_ID) {
                         // Tab khác vừa mở — đẩy tab này sang trang cảnh báo
                         document.body.innerHTML = `
@@ -37,15 +37,15 @@
                                     padding: 12px 30px; background: #ef4444; color: white;
                                     border: none; border-radius: 10px; font-size: 1rem;
                                     cursor: pointer; transition: 0.2s;
-                                ">Dậng tab này</button>
-                                <a href="/dashboard" style="color: #60a5fa; font-size: 0.9rem; margin-top: -10px;">Hoặc tiếp tục tại đây (tab khác sẽ bị dậng)</a>
+                                ">Dừng tab này</button>
+                                <a href="/dashboard" style="color: #60a5fa; font-size: 0.9rem; margin-top: -10px;">Hoặc tiếp tục tại đây (tab khác sẽ bị dừng)</a>
                             </div>
                         `;
                     }
                 };
 
                 // Dịn dẹp khi đóng tab
-                window.addEventListener('beforeunload', function() {
+                window.addEventListener('beforeunload', function () {
                     tabChannel.close();
                 });
             }
@@ -371,7 +371,7 @@
             top: 15px;
             left: 15px;
             z-index: 200;
-            background: rgba(255,255,255,0.12);
+            background: rgba(255, 255, 255, 0.12);
             border: none;
             color: white;
             font-size: 22px;
@@ -386,10 +386,13 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.5);
             z-index: 99;
         }
-        .sidebar-overlay.active { display: block; }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
 
         /* ─── RESPONSIVE ──── */
         @media (max-width: 900px) {
@@ -398,33 +401,90 @@
                 z-index: 100;
                 transition: transform 0.3s ease;
             }
-            .sidebar.open { transform: translateX(0); }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
             .main {
                 margin-left: 0;
                 padding: 20px 16px;
                 padding-top: 70px;
             }
-            .hamburger { display: flex; align-items: center; justify-content: center; }
-            .topbar { flex-direction: column; align-items: flex-start; gap: 12px; }
-            .welcome h2 { font-size: 22px; }
+
+            .hamburger {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .welcome h2 {
+                font-size: 22px;
+            }
+
             .actions {
                 grid-template-columns: 1fr 1fr;
             }
-            .slide { height: 220px; }
-            .event-card { height: 220px; }
-            .event-overlay { padding: 12px 16px; left: 12px; bottom: 12px; }
-            .event-overlay h2 { font-size: 16px; }
-            .event-overlay p  { font-size: 13px; }
+
+            .slide {
+                height: 220px;
+            }
+
+            .event-card {
+                height: 220px;
+            }
+
+            .event-overlay {
+                padding: 12px 16px;
+                left: 12px;
+                bottom: 12px;
+            }
+
+            .event-overlay h2 {
+                font-size: 16px;
+            }
+
+            .event-overlay p {
+                font-size: 13px;
+            }
         }
 
         @media (max-width: 500px) {
-            .actions { grid-template-columns: 1fr; }
-            .table-box { overflow-x: auto; }
-            table { min-width: 450px; }
-            .slide { height: 180px; }
-            .event-card { height: 180px; }
-            .event-overlay { display: none; } /* hide overlay on very small */
-            #chatWidget { width: calc(100vw - 20px) !important; right: 10px !important; }
+            .actions {
+                grid-template-columns: 1fr;
+            }
+
+            .table-box {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 450px;
+            }
+
+            .slide {
+                height: 180px;
+            }
+
+            .event-card {
+                height: 180px;
+            }
+
+            .event-overlay {
+                display: none;
+            }
+
+            /* hide overlay on very small */
+            #chatWidget {
+                width: calc(100vw - 20px) !important;
+                right: 10px !important;
+            }
         }
     </style>
 </head>
@@ -618,7 +678,7 @@
                     showChatMessage("📢 THÔNG BÁO: " + msg.content, false);
                     notifyNewMessage();
                 });
-            }, function(error) {
+            }, function (error) {
                 console.error("Lỗi kết nối WebSocket, đang thử lại...", error);
                 setTimeout(connectChat, 5000); // Tự động reconnect sau 5s
             });
