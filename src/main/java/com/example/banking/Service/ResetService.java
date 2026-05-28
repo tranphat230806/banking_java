@@ -48,7 +48,7 @@ public class ResetService {
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setTo(email);
         msg.setSubject("OTP Reset Password");
-        msg.setText("Mã OTP của " + user.getUsername() + "là: " + otp + " (hết hạn 5 phút)");
+        msg.setText("Mã OTP của " + user.getUsername() + " là: " + otp + " (hết hạn 5 phút)");
         mailSender.send(msg);
     }
 
