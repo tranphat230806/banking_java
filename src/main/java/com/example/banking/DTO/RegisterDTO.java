@@ -1,12 +1,14 @@
 package com.example.banking.DTO;
 
+import org.springframework.web.multipart.MultipartFile;
+
 public class RegisterDTO {
     private String username;
     private String password;
     private String fullName;
     private String email;
     private String phone;
-    private String avatar;
+    private MultipartFile avatar;
 
     public String getUsername() {
         return username;
@@ -48,11 +50,11 @@ public class RegisterDTO {
         this.phone = phone;
     }
 
-    public String getAvatar() {
+    public MultipartFile getAvatar() {
         return avatar;
     }
 
-    public void setAvatar(String avatar) {
+    public void setAvatar(MultipartFile avatar) {
         this.avatar = avatar;
     }
 

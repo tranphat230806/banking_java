@@ -320,7 +320,7 @@ public class TransectionController {
 
             // 5. lưu file
             Path filePath = uploadPath.resolve(filename);
-            file.transferTo(filePath.toFile());
+            file.transferTo(filePath);
 
             // 6. update DB
             UserClass user = userrepo.findByUsername(username)
@@ -454,14 +454,28 @@ public class TransectionController {
 
     //Create
     @GetMapping("/create")
-    public String fromCreate(Model model) {
-        model.addAttribute("dto", new RegisterDTO());
+    public String fromCreate() {
         return "formCreate";
     }
 
-    @PostMapping("/create")
-    public String Register_in_bank(@ModelAttribute RegisterDTO dto, Model model) {
+    @PostMapping(value = "/create", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public String Register_in_bank(
+            @RequestParam String username,
+            @RequestParam String password,
+            @RequestParam String fullName,
+            @RequestParam String email,
+            @RequestParam String phone,
+            @RequestParam(required = false) MultipartFile avatar,
+            Model model) {
         try {
+            RegisterDTO dto = new RegisterDTO();
+            dto.setUsername(username);
+            dto.setPassword(password);
+            dto.setFullName(fullName);
+            dto.setEmail(email);
+            dto.setPhone(phone);
+            dto.setAvatar(avatar);
+
             // Kiểm tra xem username đã tồn tại chưa
             if (createser.isUsernameTaken(dto.getUsername())) {
                 model.addAttribute("error", "Code đã tồn tại!!!!");
@@ -470,7 +484,7 @@ public class TransectionController {
             // Gọi service để tạo user và tài khoản
             createser.registerUser(dto);
             model.addAttribute("success", "Bạn đã đăng kí thành công!!!");
-            return "login";  // Redirect đến trang login sau khi đăng ký thành công
+            return "redirect:/login";  // Redirect đến trang login sau khi đăng ký thành công
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("error", "Đã có lỗi xảy ra, vui lòng thử lại.");
