@@ -45,6 +45,10 @@ public class PasswordConfig {
 
                         .anyRequest().authenticated()
                 )
+                .sessionManagement(session -> session
+                        .maximumSessions(1)
+                        .maxSessionsPreventsLogin(true) // Ngăn chặn đăng nhập thứ 2 và ném ra lỗi
+                )
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
@@ -71,6 +75,11 @@ public class PasswordConfig {
                 );
 
         return http.build();
+    }
+
+    @Bean
+    public org.springframework.security.web.session.HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new org.springframework.security.web.session.HttpSessionEventPublisher();
     }
 
     @Bean

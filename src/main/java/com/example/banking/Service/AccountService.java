@@ -6,6 +6,7 @@ import com.example.banking.DTO.TransectionDTO;
 import com.example.banking.Entity.AccountClass;
 import com.example.banking.Entity.BillClass;
 import com.example.banking.Entity.UserClass;
+import com.example.banking.Controller.ChatController;
 import com.example.banking.Repository.AccountRepository;
 import com.example.banking.Repository.BillRepository;
 import com.example.banking.Repository.TransactionRepository;
@@ -109,15 +110,16 @@ public class AccountService {
             // Notify Sender
             ChatMessageDTO senderMsg = new ChatMessageDTO("System", 
                     "💸 Chuyển khoản thành công " + request.getAmount() + " VND tới tài khoản " + toAcc.getCode() + ".", 
-                    ChatMessageDTO.MessageType.BOT);
+                    ChatMessageDTO.MessageType.NOTIFICATION);
             messagingTemplate.convertAndSend("/topic/user." + username, senderMsg);
 
             // Notify Receiver
             if (toAcc.getUser() != null) {
+                String receiverUsername = toAcc.getUser().getUsername();
                 ChatMessageDTO receiverMsg = new ChatMessageDTO("System", 
                         "💰 Bạn vừa nhận được " + request.getAmount() + " VND từ " + userEntity.getFullName() + ". Nội dung: " + request.getDescription(), 
-                        ChatMessageDTO.MessageType.BOT);
-                messagingTemplate.convertAndSend("/topic/user." + toAcc.getUser().getUsername(), receiverMsg);
+                        ChatMessageDTO.MessageType.NOTIFICATION);
+                messagingTemplate.convertAndSend("/topic/user." + receiverUsername, receiverMsg);
             }
         } catch (Exception e) {
             e.printStackTrace();
