@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -36,7 +36,7 @@ public class ChatController {
     private static final Map<String, List<ChatMessageDTO>> chatHistory = new ConcurrentHashMap<>();
 
     public static void addMessageToHistory(String targetUsername, ChatMessageDTO msg) {
-        chatHistory.computeIfAbsent(targetUsername, k -> new ArrayList<>()).add(msg);
+        chatHistory.computeIfAbsent(targetUsername, k -> new CopyOnWriteArrayList<>()).add(msg);
     }
 
     public static void clearChatHistory() {
@@ -97,6 +97,8 @@ public class ChatController {
 
     @MessageMapping("/chat.adminBroadcast")
     public void adminBroadcast(@Payload ChatMessageDTO chatMessage) {
+        // Save broadcast to history so it's not lost
+        addMessageToHistory("BROADCAST", chatMessage);
         // Broadcast the admin's message to all users
         messagingTemplate.convertAndSend("/topic/broadcast", chatMessage);
     }

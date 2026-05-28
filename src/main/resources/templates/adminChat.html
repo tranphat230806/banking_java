@@ -150,6 +150,7 @@
 <script>
     let stompClient = null;
     const users = {}; // username -> array of messages
+    const unreadCounts = {}; // username -> count of unread messages
     let activeUser = null;
 
     function connect() {
@@ -177,9 +178,9 @@
         if (activeUser === sender) {
             appendMessage(msg);
         } else {
-            // Add unread indicator
-            const userDiv = document.getElementById('user-' + sender);
-            if (userDiv) userDiv.style.fontWeight = 'bold';
+            // Increment unread and update UI
+            unreadCounts[sender] = (unreadCounts[sender] || 0) + 1;
+            renderUserList();
         }
     }
 
@@ -200,7 +201,15 @@
             const div = document.createElement('div');
             div.className = 'user-item' + (activeUser === username ? ' active' : '');
             div.id = 'user-' + username;
-            div.innerText = username;
+            
+            const count = unreadCounts[username] || 0;
+            if (count > 0) {
+                div.innerHTML = `<span>${username}</span> <span style="background: #ef4444; color: white; border-radius: 9999px; padding: 2px 6px; font-size: 11px; float: right;">${count}</span>`;
+                div.style.fontWeight = 'bold';
+            } else {
+                div.innerText = username;
+            }
+            
             div.onclick = () => selectUser(username);
             list.appendChild(div);
         }
@@ -212,9 +221,7 @@
         document.getElementById('adminInput').disabled = false;
         document.getElementById('sendBtn').disabled = false;
 
-        const userDiv = document.getElementById('user-' + username);
-        if (userDiv) userDiv.style.fontWeight = 'normal';
-
+        unreadCounts[username] = 0;
         renderUserList();
         renderMessages();
     }
