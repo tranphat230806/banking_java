@@ -47,7 +47,8 @@ public class PasswordConfig {
                 )
                 .sessionManagement(session -> session
                         .maximumSessions(1)
-                        .maxSessionsPreventsLogin(true) // Ngăn chặn đăng nhập thứ 2 và ném ra lỗi
+                        .maxSessionsPreventsLogin(false) // Cho phép đăng nhập mới, đá session cũ
+                        .expiredUrl("/login?expired=true") // Chuyển hướng session cũ khi bị đá
                 )
                 .formLogin(form -> form
                         .loginPage("/login")

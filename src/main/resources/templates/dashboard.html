@@ -507,6 +507,9 @@
                     showChatMessage("📢 THÔNG BÁO: " + msg.content, false);
                     notifyNewMessage();
                 });
+            }, function(error) {
+                console.error("Lỗi kết nối WebSocket, đang thử lại...", error);
+                setTimeout(connectChat, 5000); // Tự động reconnect sau 5s
             });
         }
 
