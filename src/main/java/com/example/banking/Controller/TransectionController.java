@@ -490,22 +490,27 @@ public class TransectionController {
             dto.setPhone(phone);
             dto.setAvatar(avatar);
 
-            // Kiểm tra xem username đã tồn tại chưa
+            // Kiểm tra username đã tồn tại chưa
             if (createser.isUsernameTaken(dto.getUsername())) {
                 model.addAttribute("error", "Tên đăng nhập đã tồn tại, vui lòng chọn tên khác!");
-                return "formCreate";  // Trả về trang tạo tài khoản nếu có lỗi
+                return "formCreate";
+            }
+            // Kiểm tra email đã được dùng chưa
+            if (createser.isEmailTaken(dto.getEmail())) {
+                model.addAttribute("error", "Email này đã được liên kết với một tài khoản khác!");
+                return "formCreate";
             }
             // Gọi service để tạo user và tài khoản
             createser.registerUser(dto);
             model.addAttribute("success", "Bạn đã đăng kí thành công!!!");
-            return "redirect:/login";  // Redirect đến trang login sau khi đăng ký thành công
+            return "redirect:/login";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
             return "formCreate";
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("error", "Đã có lỗi xảy ra, vui lòng thử lại.");
-            return "formCreate";  // Nếu có lỗi, trả về trang tạo tài khoản
+            return "formCreate";
         }
     }
 
@@ -532,9 +537,11 @@ public class TransectionController {
     }
 
     @PostMapping("/forgot")
-    public String sendOtp(@RequestParam String email, Model model) {
+    public String sendOtp(@RequestParam String username,
+                          @RequestParam String email,
+                          Model model) {
         try {
-            resetser.guiOTP(email);
+            resetser.guiOTP(username.trim(), email.trim());
             model.addAttribute("email", email);
             return "resetPassword";
         } catch (Exception e) {

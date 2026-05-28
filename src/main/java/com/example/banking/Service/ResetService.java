@@ -27,28 +27,35 @@ public class ResetService {
     PasswordEncoder passwordEncoder;
 
     @Transactional
-    //send OTP to user
-    public void guiOTP(String email) {
-        UserClass user = userepo.findByEmail(email).orElseThrow(() -> new RuntimeException("không tìm thấy email này trong hệ thống"));
+    public void guiOTP(String username, String email) {
+        // Tìm user theo username trước
+        UserClass user = userepo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản với username này"));
+
+        // Kiểm tra email có khớp với tài khoản đó không
+        if (!user.getEmail().equalsIgnoreCase(email.trim())) {
+            throw new RuntimeException("Email không khớp với tài khoản đã đăng ký");
+        }
+
         String otp = String.valueOf(100000 + new Random().nextInt(900000));
         ResetPasswordClass reset = new ResetPasswordClass();
         reset.setUser(user);
         reset.setCodeOTP(otp);
         reset.setExpiredAt(LocalDateTime.now().plusMinutes(5));
-
         resetrepo.save(reset);
 
-        // gửi mail
+        // Gửi mail
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setTo(email);
         msg.setSubject("OTP Reset Password");
-        msg.setText("Mã OTP của bạn: " + otp + " (hết hạn 5 phút)");
+        msg.setText("Mã OTP của " + user.getUsername() + "là: " + otp + " (hết hạn 5 phút)");
         mailSender.send(msg);
     }
 
     public void resetPassword(String otp, String newPassword) {
 
-        ResetPasswordClass reset = resetrepo.findByCodeOTPAndIsUsedFalse(otp).orElseThrow(() -> new RuntimeException("OTP sai"));
+        ResetPasswordClass reset = resetrepo.findByCodeOTPAndIsUsedFalse(otp)
+                .orElseThrow(() -> new RuntimeException("OTP sai"));
 
         if (reset.getExpiredAt().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("OTP hết hạn");

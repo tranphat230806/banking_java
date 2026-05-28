@@ -45,6 +45,14 @@ public class RegisterService {
                 || adminRepository.findByUsername(username).isPresent();
     }
 
+    /**
+     * Kiểm tra email đã được đăng ký chưa.
+     */
+    @Transactional
+    public boolean isEmailTaken(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
+
     public UserClass registerUser(RegisterDTO registerDTO) throws IOException {
 
         // 1. Kiểm tra username đã tồn tại hay chưa (cả 2 bảng users và admins)
