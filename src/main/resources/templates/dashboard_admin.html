@@ -251,7 +251,12 @@
 <script th:inline="javascript">
     // 1. Nhận mảng dữ liệu tài chính tự động được nạp từ Spring Boot qua Thymeleaf Inline
     let monthlyStats = /*[[${monthlyChartData}]]*/ [];
+    let dailyStats = /*[[${dailyChartData}]]*/ [];
     console.log("Monthly Stats (Real DB Data):", monthlyStats);
+    console.log("Daily Stats (Real DB Data):", dailyStats);
+    
+    // Tạo labels 24h: '00:00', '01:00', ... '23:00'
+    const hourlyLabels = Array.from({length: 24}, (_, i) => i.toString().padStart(2, '0') + ':00');
     // 2. Cấu hình và vẽ biểu đồ trực quan xu hướng luồng tiền bằng Chart.js
     const chartCanvas = document.getElementById('financialGrowthChart').getContext('2d');
     let financialChart = new Chart(chartCanvas, {
@@ -292,9 +297,9 @@
     // Hàm thay đổi góc nhìn dữ liệu cho biểu đồ trực quan (Ngày/Tháng/Năm)
     function changeChartPeriod(type) {
         if (type === 'day') {
-            // Giả lập chuyển sang góc nhìn luồng tiền giao dịch trong ngày hôm nay theo các mốc giờ
-            financialChart.data.labels = ['06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
-            financialChart.data.datasets[0].data = [5000000, 25000000, 45000000, 12000000, 68000000, 15000000];
+            // Chuyển sang góc nhìn luồng tiền giao dịch 24h trong ngày hôm nay
+            financialChart.data.labels = hourlyLabels;
+            financialChart.data.datasets[0].data = dailyStats;
             financialChart.update();
         } else {
             // Khôi phục lại góc nhìn toàn bộ các tháng trong năm
