@@ -10,6 +10,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
@@ -47,8 +49,9 @@ public class PasswordConfig {
                 )
                 .sessionManagement(session -> session
                         .maximumSessions(1)
-                        .maxSessionsPreventsLogin(false) // Cho phép đăng nhập mới, đá session cũ
-                        .expiredUrl("/login?expired=true") // Chuyển hướng session cũ khi bị đá
+                        .sessionRegistry(sessionRegistry())  // Dùng registry tường minh theo dõi cross-device
+                        .maxSessionsPreventsLogin(false)      // Cho phép đăng nhập mới, đá session cũ
+                        .expiredUrl("/login?expired=true")   // Chuyển hướng session cũ khi bị đá
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
@@ -81,6 +84,11 @@ public class PasswordConfig {
     @Bean
     public org.springframework.security.web.session.HttpSessionEventPublisher httpSessionEventPublisher() {
         return new org.springframework.security.web.session.HttpSessionEventPublisher();
+    }
+
+    @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
     }
 
     @Bean
