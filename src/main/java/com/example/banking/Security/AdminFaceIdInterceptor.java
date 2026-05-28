@@ -12,22 +12,22 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class AdminFaceIdInterceptor implements HandlerInterceptor {
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        String uri = request.getRequestURI();
-
-        // Bỏ qua các request tới trang xác thực FaceID để tránh loop
-        if (uri.startsWith("/admin/face-verify")) {
-            return true;
-        }
+    public boolean preHandle(HttpServletRequest request,
+                             HttpServletResponse response,
+                             Object handler) throws Exception {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
         if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser")) {
             boolean isAdmin = auth.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")
+                               || a.getAuthority().equals("ADMIN"));
 
             if (isAdmin) {
-                HttpSession session = request.getSession();
-                Boolean isVerified = (Boolean) session.getAttribute("admin_face_verified");
+                HttpSession session = request.getSession(false);
+                Boolean isVerified = (session != null)
+                        ? (Boolean) session.getAttribute("admin_face_verified")
+                        : null;
 
                 if (isVerified == null || !isVerified) {
                     response.sendRedirect("/admin/face-verify");

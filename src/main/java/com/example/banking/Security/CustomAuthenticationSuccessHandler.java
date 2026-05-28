@@ -22,7 +22,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         // Trích xuất danh sách quyền hiện tại của tài khoản vừa đăng nhập thành công
         Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());
 
-        // Kiểm tra Admin (chấp nhận cả ROLE_ADMIN hoặc ADMIN)
+        // Kiểm tra Admin — luôn yêu cầu xác thực khuôn mặt sau đăng nhập
         if (roles.contains("ROLE_ADMIN") || roles.contains("ADMIN")) {
             response.sendRedirect("/admin/face-verify");
         }

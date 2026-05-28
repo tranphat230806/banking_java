@@ -438,6 +438,7 @@ public class TransectionController {
             AdminClass admin = adminrepo.findByUsername(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy admin"));
             model.addAttribute("admin", admin);
+            model.addAttribute("user", admin);
             return "profileAdmin";
         } else {
             String username = userDetails.getUsername();
@@ -628,7 +629,11 @@ public class TransectionController {
 
     // --- Admin Face Verify Endpoints ---
     @GetMapping("/admin/face-verify")
-    public String adminFaceVerifyPage() {
+    public String adminFaceVerifyPage(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+        AdminClass admin = adminrepo.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy admin"));
+        model.addAttribute("faceRegistered", admin.isFaceRegistered());
+        model.addAttribute("adminName", admin.getFullName());
         return "adminFaceVerify";
     }
 
@@ -649,11 +654,41 @@ public class TransectionController {
                 response.put("success", true);
                 response.put("redirect", "/admin/dashboard");
             } else {
-                request.logout();
-                session.invalidate();
                 response.put("success", false);
-                response.put("message", "Xác thực khuôn mặt thất bại.");
+                response.put("message", "Xác thực khuôn mặt thất bại. Vui lòng thử lại.");
             }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+        }
+        return response;
+    }
+
+    /**
+     * Lần đầu tiên đăng nhập: đăng ký khuôn mặt và xác thực luôn trong 1 bước.
+     * Admin chụp nh
+     */
+    @PostMapping("/admin/face-verify/register-and-verify")
+    @ResponseBody
+    public Map<String, Object> registerAndVerifyAdminFace(@RequestBody Map<String, String> body,
+                                                          @AuthenticationPrincipal CustomUserDetails userDetails,
+                                                          HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            AdminClass admin = adminrepo.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy admin"));
+
+            boolean registered = faceIdService.registerFace(admin, body.get("image"));
+            if (!registered) {
+                response.put("success", false);
+                response.put("message", "Không phát hiện khuôn mặt. Vui lòng thử lại.");
+                return response;
+            }
+
+            // Đăng ký thành công → đánh dấu session verified luôn
+            session.setAttribute("admin_face_verified", true);
+            response.put("success", true);
+            response.put("redirect", "/admin/dashboard");
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", e.getMessage());

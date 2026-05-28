@@ -304,16 +304,8 @@
                 <span th:text="${#temporals.format(user.createdAt,'dd/MM/yyyy')}">29/04/2026</span>
             </div>
 
-            <div class="balance-box">
-                <div class="balance-label">Current Balance</div>
-                <div class="balance"
-                     th:text="${account.balance} + ' ' + ${account.currency}">
-                    12,500,000 VND
-                </div>
-
-            </div>
             <div class="footer-note">
-                <a href="/dashboard" class="value">Về trang chủ</a>
+                <a href="/admin/dashboard" class="value">Về trang chủ quản trị</a>
             </div>
         </div>
 
@@ -321,39 +313,29 @@
         <div class="card detail-card">
 
             <div class="section-title">
-                Account <span>Information</span>
+                Admin <span>Information</span>
             </div>
 
             <div class="detail-grid">
 
                 <div class="detail-item">
                     <div class="label">Full Name</div>
-                    <div class="value" th:text="${user.fullName}">Trần Văn Phát</div>
+                    <div class="value" th:text="${user.fullName}">Administrator</div>
                 </div>
 
                 <div class="detail-item">
                     <div class="label">Username</div>
-                    <div class="value" th:text="${user.username}">phat123</div>
+                    <div class="value" th:text="${user.username}">admin</div>
                 </div>
 
                 <div class="detail-item">
                     <div class="label">Email</div>
-                    <div class="value" th:text="${user.email}">abc@gmail.com</div>
+                    <div class="value" th:text="${user.email}">admin@banking.com</div>
                 </div>
 
                 <div class="detail-item">
                     <div class="label">Phone</div>
                     <div class="value" th:text="${user.phone}">0987654321</div>
-                </div>
-
-                <div class="detail-item">
-                    <div class="label">Account Code</div>
-                    <div class="value" th:text="${account.code}">ACC001</div>
-                </div>
-
-                <div class="detail-item">
-                    <div class="label">Currency</div>
-                    <div class="value" th:text="${account.currency}">VND</div>
                 </div>
 
                 <div class="detail-item wide"
@@ -365,18 +347,6 @@
                         </div>
                     </div>
                     <button class="btn" style="margin: 0;" onclick="openFaceModal()">Đăng ký FaceID</button>
-                </div>
-
-                <div class="detail-item wide"
-                     style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div class="label">Transfer PIN</div>
-                        <div class="value" th:text="${user.transferPin != null ? 'Đã thiết lập' : 'Chưa thiết lập'}"
-                             th:style="${user.transferPin != null ? 'color: #22c55e;' : 'color: #ef4444;'}">Chưa thiết
-                            lập
-                        </div>
-                    </div>
-                    <button class="btn" style="margin: 0;" onclick="openPinModal()">Thiết lập mã PIN</button>
                 </div>
 
                 <div class="detail-item wide">
@@ -407,18 +377,6 @@
         <button class="btn" onclick="captureFace()">Chụp & Đăng ký</button>
         <button class="btn btn-close" onclick="closeFaceModal()">Hủy</button>
         <div id="faceStatus" style="margin-top: 10px; color: #94a3b8;"></div>
-    </div>
-</div>
-
-<!-- PIN Modal -->
-<div id="pinModal" class="modal">
-    <div class="modal-content" style="width: 320px;">
-        <h3 style="margin-bottom: 15px; color: #38bdf8;">Thiết lập mã PIN</h3>
-        <input type="password" id="pinInput" placeholder="Nhập 6 số" maxlength="6"
-               style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: none;">
-        <button class="btn" onclick="setupPin()">Lưu PIN</button>
-        <button class="btn btn-close" onclick="closePinModal()">Hủy</button>
-        <div id="pinStatus" style="margin-top: 10px; color: #94a3b8;"></div>
     </div>
 </div>
 
@@ -464,7 +422,7 @@
         const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
         try {
-            const response = await fetch('/face/register', {
+            const response = await fetch('/admin/face/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -483,50 +441,6 @@
             }
         } catch (err) {
             alert("Đã xảy ra lỗi mạng.");
-        }
-    }
-
-    const pinModal = document.getElementById('pinModal');
-
-    function openPinModal() {
-        pinModal.style.display = 'flex';
-    }
-
-    function closePinModal() {
-        pinModal.style.display = 'none';
-        document.getElementById('pinInput').value = '';
-        document.getElementById('pinStatus').innerText = '';
-    }
-
-    async function setupPin() {
-        const pin = document.getElementById('pinInput').value;
-        if (!/^\d{6}$/.test(pin)) {
-            document.getElementById('pinStatus').innerText = 'Mã PIN phải gồm 6 chữ số';
-            return;
-        }
-
-        const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-        const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
-
-        try {
-            const response = await fetch('/profile/setup-pin', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    [header]: token
-                },
-                body: JSON.stringify({pin: pin})
-            });
-            const result = await response.json();
-
-            if (result.success) {
-                alert("Thiết lập mã PIN thành công!");
-                location.reload();
-            } else {
-                document.getElementById('pinStatus').innerText = "Lỗi: " + result.message;
-            }
-        } catch (err) {
-            document.getElementById('pinStatus').innerText = "Đã xảy ra lỗi mạng.";
         }
     }
 </script>

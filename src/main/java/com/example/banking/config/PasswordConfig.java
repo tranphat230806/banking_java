@@ -52,6 +52,9 @@ public class PasswordConfig {
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
+                        .invalidateHttpSession(true)       // Xóa toàn bộ session (bao gồm admin_face_verified)
+                        .clearAuthentication(true)         // Xóa SecurityContext
+                        .deleteCookies("JSESSIONID")       // Xóa cookie session trên browser
                         .permitAll()
                 );
 

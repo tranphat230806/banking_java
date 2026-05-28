@@ -16,12 +16,17 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(adminFaceIdInterceptor)
-                .addPathPatterns("/admin/**");
+                .addPathPatterns("/admin/**")
+                // Loại trừ trang face-verify và các API của nó để tránh redirect loop
+                .excludePathPatterns(
+                        "/admin/face-verify",
+                        "/admin/face-verify/**",
+                        "/admin/face/**"
+                );
     }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:uploads/");
     }

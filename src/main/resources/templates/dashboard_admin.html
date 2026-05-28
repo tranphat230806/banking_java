@@ -53,13 +53,11 @@
             <a th:href="@{/admin/chat}"
                class="sidebar-item flex items-center px-4 py-3 rounded-lg text-sm font-medium">
                 <i class="fas fa-comment-dots mr-3 text-lg"></i> Hỗ trợ trực tuyến
-                <span
-                        class="ml-auto bg-amber-500 text-slate-900 text-xs font-bold px-2 py-0.5 rounded-full">New</span>
+                <span class="ml-auto bg-amber-500 text-slate-900 text-xs font-bold px-2 py-0.5 rounded-full">New</span>
             </a>
-            <a th:href="@{/profile}">👤 Hồ Sơ</a>
-            <a th:href="@{/banking}"
+            <a th:href="@{/profile}"
                class="sidebar-item flex items-center px-4 py-3 rounded-lg text-sm font-medium">
-                <i class="fas fa-paper-plane mr-3 text-lg"></i> Chuyển tiền hệ thống
+                <i class="fas fa-user-circle mr-3 text-lg"></i> Hồ sơ Admin
             </a>
         </nav>
     </div>
@@ -75,10 +73,13 @@
                 <p class="text-sm font-semibold text-white tracking-wide">ADMIN</p>
             </div>
         </div>
-        <a th:href="@{/logout}"
+        <a href="#" onclick="document.getElementById('adminLogoutForm').submit(); return false;"
            class="flex items-center px-4 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-950/30 hover:text-red-300 transition-colors">
             <i class="fas fa-sign-out-alt mr-3"></i> Đăng xuất tài khoản
         </a>
+        <form id="adminLogoutForm" th:action="@{/logout}" method="post" style="display:none;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        </form>
     </div>
 </aside>
 

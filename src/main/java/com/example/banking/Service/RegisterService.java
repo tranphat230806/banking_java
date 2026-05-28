@@ -4,6 +4,7 @@ import com.example.banking.DTO.RegisterDTO;
 import com.example.banking.Entity.AccountClass;
 import com.example.banking.Entity.UserClass;
 import com.example.banking.Repository.AccountRepository;
+import com.example.banking.Repository.AdminRepository;
 import com.example.banking.Repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,24 +24,36 @@ import java.util.Random;
 public class RegisterService {
 
     @Autowired
-    private UserRepository userRepository;  // Dùng repository để lưu User
+    private UserRepository userRepository;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;  // Dùng để mã hóa mật khẩu
+    private AdminRepository adminRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private AccountRepository accountRepository;
 
+    /**
+     * Kiểm tra username đã được dùng ở bảng users HOẶC bảng admins chưa.
+     * Ngăn user đăng ký tên trùng với tài khoản admin.
+     */
     @Transactional
     public boolean isUsernameTaken(String username) {
-        return userRepository.findByUsername(username).isPresent();
+        return userRepository.findByUsername(username).isPresent()
+                || adminRepository.findByUsername(username).isPresent();
     }
 
     public UserClass registerUser(RegisterDTO registerDTO) throws IOException {
 
-        // 1. Kiểm tra username đã tồn tại hay chưa
-        if (userRepository.findByUsername(registerDTO.getUsername()).isPresent()) {
+        // 1. Kiểm tra username đã tồn tại hay chưa (cả 2 bảng users và admins)
+        String username = registerDTO.getUsername();
+        if (userRepository.findByUsername(username).isPresent()) {
             throw new RuntimeException("Username đã tồn tại");
+        }
+        if (adminRepository.findByUsername(username).isPresent()) {
+            throw new RuntimeException("Username này không được phép sử dụng");
         }
 
         // 2. Xử lý avatar: lưu file vào disk, lấy đường dẫn
