@@ -128,7 +128,7 @@
     </div>
 
     <script>
-        const isLocked = [[${isLocked}]];
+        const isLocked = /*[[${isLocked}]]*/ false;
         
         async function verifyPin() {
             const pin = document.getElementById('pinInput').value;
