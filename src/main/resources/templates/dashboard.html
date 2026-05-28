@@ -758,25 +758,74 @@
 
             const toast = document.createElement('div');
             const isReceive = content.includes('nhận được');
+            
+            let htmlContent = content; // Fallback
+            
+            if (isReceive) {
+                // Format: "💰 Bạn vừa nhận được {amount} VND từ {sender}. Nội dung: {desc}"
+                const match = content.match(/nhận được (.*?) VND từ (.*?)\. Nội dung: (.*)/);
+                if (match) {
+                    htmlContent = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:6px;">
+                            <strong style="font-size:15px; color:#4ade80;">📥 Nhận tiền</strong>
+                            <span style="font-size:12px; opacity:0.8;">Vừa xong</span>
+                        </div>
+                        <div style="font-size:22px; font-weight:bold; color:white;">
+                            +${match[1]} VND
+                        </div>
+                        <div style="color:#e2e8f0; font-size: 14px;">
+                            Người gửi: <strong style="color: #fff;">${match[2]}</strong>
+                        </div>
+                        <div style="font-size:13px; font-style:italic; opacity:0.9; margin-top:4px;">
+                            "${match[3]}"
+                        </div>
+                    `;
+                }
+            } else {
+                // Format: "💸 Chuyển khoản thành công {amount} VND tới tài khoản {receiver}."
+                const match = content.match(/thành công (.*?) VND tới tài khoản (.*?)\./);
+                if (match) {
+                    htmlContent = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:6px;">
+                            <strong style="font-size:15px; color:#60a5fa;">📤 Chuyển khoản</strong>
+                            <span style="font-size:12px; opacity:0.8;">Vừa xong</span>
+                        </div>
+                        <div style="font-size:22px; font-weight:bold; color:white;">
+                            -${match[1]} VND
+                        </div>
+                        <div style="color:#e2e8f0; font-size: 14px;">
+                            Tới tài khoản: <strong style="color: #fff;">${match[2]}</strong>
+                        </div>
+                    `;
+                }
+            }
+
             toast.style.cssText = [
-                'background:' + (isReceive ? 'linear-gradient(135deg,#065f46,#059669)' : 'linear-gradient(135deg,#1e3a8a,#2563eb)'),
-                'color:white', 'padding:14px 18px', 'border-radius:12px',
-                'font-size:14px', 'max-width:320px', 'box-shadow:0 8px 24px rgba(0,0,0,0.3)',
+                'background:' + (isReceive ? 'linear-gradient(135deg,#064e3b,#059669)' : 'linear-gradient(135deg,#1e3a8a,#2563eb)'),
+                'color:white', 'padding:16px 20px', 'border-radius:14px',
+                'font-size:14px', 'width:320px', 'box-shadow:0 10px 25px rgba(0,0,0,0.5)',
                 'pointer-events:auto', 'cursor:pointer',
-                'animation:toastIn 0.4s ease', 'line-height:1.5',
-                'border-left:4px solid ' + (isReceive ? '#34d399' : '#60a5fa')
+                'animation:toastIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)', 'line-height:1.5',
+                'border-left:5px solid ' + (isReceive ? '#34d399' : '#60a5fa'),
+                'display:flex', 'flex-direction:column', 'gap:8px'
             ].join(';');
-            toast.innerHTML = (isReceive ? '💰 ' : '💸 ') + content;
+            
+            toast.innerHTML = htmlContent;
 
             // Click để đóng
-            toast.addEventListener('click', () => toast.remove());
-            container.appendChild(toast);
-
-            // Tự đóng sau 6 giây
-            setTimeout(() => {
+            toast.addEventListener('click', () => {
                 toast.style.animation = 'toastOut 0.4s ease forwards';
                 setTimeout(() => toast.remove(), 400);
-            }, 6000);
+            });
+            container.appendChild(toast);
+
+            // Tự đóng sau 8 giây
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.style.animation = 'toastOut 0.4s ease forwards';
+                    setTimeout(() => toast.remove(), 400);
+                }
+            }, 8000);
         }
 
         // ─── Load lịch sử chat của user khi vào trang ───────────
