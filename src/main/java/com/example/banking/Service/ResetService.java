@@ -46,16 +46,16 @@ public class ResetService {
 
         // Gửi mail
         SimpleMailMessage msg = new SimpleMailMessage();
-        msg.setTo(user.getEmail());
-        msg.setSubject("[BATLBANK] Mã OTP Đặt lại mật khẩu");
-        msg.setText("Xin chào " + user.getFullName() + ",\n\nMã OTP đặt lại mật khẩu của bạn là: " + otp
-                + "\nMã có hiệu lực trong 5 phút. Không chia sẻ mã này cho ai.\n\nTrân trọng.");
+        msg.setTo(email);
+        msg.setSubject("OTP Reset Password");
+        msg.setText("Mã OTP của " + user.getUsername() + "là: " + otp + " (hết hạn 5 phút)");
         mailSender.send(msg);
     }
 
     public void resetPassword(String otp, String newPassword) {
 
-        ResetPasswordClass reset = resetrepo.findByCodeOTPAndIsUsedFalse(otp).orElseThrow(() -> new RuntimeException("OTP sai"));
+        ResetPasswordClass reset = resetrepo.findByCodeOTPAndIsUsedFalse(otp)
+                .orElseThrow(() -> new RuntimeException("OTP sai"));
 
         if (reset.getExpiredAt().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("OTP hết hạn");
