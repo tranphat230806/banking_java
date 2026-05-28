@@ -7,12 +7,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: 'Inter', Arial, sans-serif;
         }
 
         body {
@@ -20,21 +22,78 @@
             color: white;
             display: flex;
             height: 100vh;
+            overflow: hidden;
         }
 
+        /* ─── SIDEBAR ─────────────────────────────── */
         .sidebar {
             width: 300px;
+            min-width: 300px;
             background: #1e293b;
-            border-right: 1px solid #334155;
+            border-right: 1px solid #2d3f55;
             display: flex;
             flex-direction: column;
+            transition: transform 0.3s ease;
         }
 
-        .header {
-            padding: 20px;
-            background: #2563eb;
-            font-weight: bold;
-            font-size: 18px;
+        .sidebar-header {
+            padding: 18px 20px;
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-title {
+            font-weight: 700;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .home-link {
+            color: #bfdbfe;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.2s;
+        }
+        .home-link:hover { color: white; }
+
+        .search-wrap {
+            position: relative;
+        }
+        .search-wrap input {
+            width: 100%;
+            padding: 9px 12px 9px 35px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            outline: none;
+            font-size: 13px;
+            transition: border 0.2s;
+        }
+        .search-wrap input::placeholder { color: #93c5fd; }
+        .search-wrap input:focus { border-color: rgba(255,255,255,0.4); }
+        .search-icon {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #93c5fd;
+            font-size: 12px;
         }
 
         .user-list {
@@ -43,367 +102,563 @@
         }
 
         .user-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid #334155;
+            padding: 14px 20px;
+            border-bottom: 1px solid #1e3a5f22;
             cursor: pointer;
-            transition: 0.2s;
+            transition: background 0.2s, padding-left 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-item:hover { background: #263548; padding-left: 24px; }
+        .user-item.active {
+            background: #1e3a5f;
+            border-left: 3px solid #3b82f6;
+            padding-left: 17px;
         }
 
-        .user-item:hover, .user-item.active {
-            background: #334155;
+        .user-item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
         }
 
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .badge {
+            background: #ef4444;
+            color: white;
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            flex-shrink: 0;
+            box-shadow: 0 0 10px rgba(239,68,68,0.5);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 6px rgba(239,68,68,0.5); }
+            50%       { box-shadow: 0 0 14px rgba(239,68,68,0.8); }
+        }
+
+        /* ─── CHAT AREA ───────────────────────────── */
         .chat-area {
             flex: 1;
             display: flex;
             flex-direction: column;
+            min-width: 0;   /* ← CRITICAL: prevents overflow */
             background: #0f172a;
         }
 
         .chat-header {
-            padding: 20px;
+            padding: 16px 24px;
             background: #1e293b;
-            border-bottom: 1px solid #334155;
-            font-weight: bold;
+            border-bottom: 1px solid #2d3f55;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
         }
 
+        .mobile-back-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            color: #60a5fa;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .chat-header-info { flex: 1; min-width: 0; }
+        .chat-header-name {
+            font-size: 16px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .chat-header-status {
+            font-size: 12px;
+            color: #22c55e;
+            margin-top: 2px;
+        }
+
+        /* ─── MESSAGES ────────────────────────────── */
         .messages {
             flex: 1;
-            padding: 20px;
             overflow-y: auto;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
 
-        .input-area button:hover {
-            background: #1d4ed8;
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            color: #475569;
         }
+        .empty-state i { font-size: 3.5rem; }
+        .empty-state p { font-size: 15px; }
 
-        /* Scrollbar styles */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1e293b; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #475569; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #64748b; 
-        }
-
-        /* Animations */
         @keyframes fadeSlideUp {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
+
         .msg {
-            padding: 12px 16px;
-            border-radius: 16px;
+            padding: 10px 14px;
+            border-radius: 14px;
             max-width: 75%;
-            word-wrap: break-word;
-            animation: fadeSlideUp 0.3s ease-out forwards;
-            line-height: 1.5;
+            word-break: break-word;
+            overflow-wrap: break-word;
             font-size: 14px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            line-height: 1.55;
+            animation: fadeSlideUp 0.25s ease-out;
         }
-
         .msg.user {
-            background: #334155;
+            background: #1e3a5f;
             align-self: flex-start;
-            border-bottom-left-radius: 4px;
+            border-bottom-left-radius: 3px;
         }
-
         .msg.admin {
             background: #2563eb;
             align-self: flex-end;
-            border-bottom-right-radius: 4px;
+            border-bottom-right-radius: 3px;
+        }
+        .msg.bot {
+            background: #1e3a2f;
+            align-self: flex-start;
+            border-bottom-left-radius: 3px;
+            color: #86efac;
+            font-style: italic;
         }
 
-        .user-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid #334155;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .msg-sender {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+        .msg.admin .msg-sender { text-align: right; color: #93c5fd; }
+        .msg.bot .msg-sender   { color: #4ade80; }
+
+        /* ─── INPUT AREA ──────────────────────────── */
+        .input-area {
+            padding: 16px 20px;
+            background: #1e293b;
+            border-top: 1px solid #2d3f55;
             display: flex;
-            justify-content: space-between;
+            gap: 10px;
             align-items: center;
-            animation: fadeIn 0.4s ease-out;
+            flex-shrink: 0;
         }
+        .input-area input {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .input-area input:focus { border-color: #3b82f6; }
+        .input-area input:disabled { opacity: 0.4; }
+        .input-area input::placeholder { color: #475569; }
 
-        .user-item:hover {
-            background: #334155;
-            padding-left: 25px;
+        .send-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
         }
+        .send-btn:hover:not(:disabled)   { background: #1d4ed8; }
+        .send-btn:active:not(:disabled)  { transform: scale(0.97); }
+        .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        .user-item.active {
-            background: #334155;
-            border-left: 4px solid #3b82f6;
+        /* ─── SCROLLBAR ───────────────────────────── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* ─── CONNECTION STATUS ───────────────────── */
+        .conn-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #ef4444;
+            display: inline-block;
+            margin-right: 5px;
+            transition: background 0.3s;
         }
-        
-        .badge {
-            background: #ef4444; 
-            color: white; 
-            border-radius: 9999px; 
-            padding: 2px 8px; 
-            font-size: 11px; 
-            font-weight: bold;
-            box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
-            animation: fadeIn 0.3s ease-out;
+        .conn-dot.online { background: #22c55e; }
+
+        /* ─── RESPONSIVE ──────────────────────────── */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: absolute;
+                top: 0; left: 0;
+                height: 100vh;
+                z-index: 20;
+                width: 100%;
+            }
+            .sidebar.hidden { transform: translateX(-100%); }
+            .mobile-back-btn { display: flex; }
+            .msg { max-width: 90%; }
         }
     </style>
 </head>
 <body>
-<div class="sidebar">
-    <div class="header" style="display: flex; flex-direction: column; gap: 15px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span><i class="fas fa-headset"></i> Support Queue</span>
-            <a href="/admin/dashboard" style="color: #60a5fa; text-decoration: none; font-size: 14px; font-weight: normal; transition: 0.3s;"><i class="fas fa-arrow-left"></i> Home</a>
+
+<!-- ─── SIDEBAR ───────────────────────────────── -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-title-row">
+            <div class="sidebar-title">
+                <i class="fas fa-headset"></i>
+                Support Queue
+                <span class="conn-dot" id="connDot"></span>
+            </div>
+            <a href="/admin/dashboard" class="home-link">
+                <i class="fas fa-arrow-left"></i> Home
+            </a>
         </div>
-        <div style="position: relative;">
-            <input type="text" id="searchInput" placeholder="Tìm kiếm người dùng..." 
-                   style="width: 100%; padding: 10px 10px 10px 35px; border-radius: 8px; border: none; background: #334155; color: white; outline: none;"
-                   onkeyup="filterUsers()">
-            <i class="fas fa-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+        <div class="search-wrap">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="searchInput" placeholder="Tìm kiếm người dùng..." onkeyup="filterUsers()">
         </div>
     </div>
+
     <div class="user-list" id="userList">
         <div class="user-item" id="user-BROADCAST" onclick="selectUser('BROADCAST')">
-            <span><i class="fas fa-bullhorn" style="margin-right: 8px; color: #fbbf24;"></i> Phát sóng (Tất cả)</span>
+            <div class="user-item-left">
+                <div class="user-avatar" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">
+                    <i class="fas fa-bullhorn" style="font-size: 13px;"></i>
+                </div>
+                <span class="user-name">Phát sóng (Tất cả)</span>
+            </div>
         </div>
-        <!-- Active chats will appear here -->
     </div>
 </div>
 
+<!-- ─── CHAT AREA ─────────────────────────────── -->
 <div class="chat-area">
+    <!-- Header -->
     <div class="chat-header" id="chatHeader">
-        <div style="display: flex; align-items: center; gap: 10px; color: #94a3b8;">
-            <i class="fas fa-comments" style="font-size: 1.5rem;"></i>
-            <span>Vui lòng chọn người dùng để chat</span>
+        <button class="mobile-back-btn" onclick="toggleSidebar()">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <div style="width: 42px; height: 42px; border-radius: 50%; background: #1e3a5f; display: flex; align-items: center; justify-content: center; color: #64748b;">
+            <i class="fas fa-comments" style="font-size: 1.2rem;"></i>
+        </div>
+        <div class="chat-header-info">
+            <div class="chat-header-name" style="color: #64748b;">Vui lòng chọn người dùng</div>
+            <div class="chat-header-status" style="color: #475569;">Chưa có cuộc hội thoại nào</div>
         </div>
     </div>
-    <div class="messages" id="messagesArea" style="justify-content: center; align-items: center; color: #64748b; font-size: 1.2rem;">
-        <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 15px; opacity: 0.5;">
-            <i class="fas fa-inbox" style="font-size: 4rem;"></i>
+
+    <!-- Messages -->
+    <div class="messages" id="messagesArea">
+        <div class="empty-state" id="emptyState">
+            <i class="fas fa-inbox"></i>
             <p>Hộp thư hỗ trợ trực tuyến</p>
+            <p style="font-size: 13px; color: #334155;">Chọn người dùng từ danh sách bên trái để bắt đầu</p>
         </div>
     </div>
-        <!-- Messages -->
-    </div>
+
+    <!-- Input -->
     <div class="input-area">
-        <input type="text" id="adminInput" placeholder="Nhập tin nhắn..." disabled
+        <input type="text" id="adminInput" placeholder="Chọn người dùng để nhắn tin..." disabled
                onkeypress="if(event.key === 'Enter') sendAdminMessage()">
-        <button id="sendBtn" disabled onclick="sendAdminMessage()">Gửi</button>
+        <button class="send-btn" id="sendBtn" disabled onclick="sendAdminMessage()">
+            <i class="fas fa-paper-plane"></i> Gửi
+        </button>
     </div>
 </div>
 
 <script>
     let stompClient = null;
-    const users = {}; // username -> array of messages
-    const unreadCounts = {}; // username -> count of unread messages
+    let isConnected = false;
+    const users = {};         // username -> [ ...messages ]
+    const unreadCounts = {};  // username -> number
     let activeUser = null;
 
+    // ─── WEBSOCKET ─────────────────────────────────
     function connect() {
         const socket = new SockJS('/ws-chat');
         stompClient = Stomp.over(socket);
         stompClient.debug = null;
-        stompClient.connect({}, function (frame) {
+
+        stompClient.connect({}, function () {
+            isConnected = true;
+            setConnStatus(true);
+
             stompClient.subscribe('/topic/admin', function (message) {
                 const msg = JSON.parse(message.body);
                 handleIncomingMessage(msg);
             });
-        }, function(error) {
-            console.error("Lỗi mất kết nối WebSocket, đang thử lại...", error);
-            setTimeout(connect, 5000); // Tự động reconnect sau 5s
+
+        }, function (err) {
+            isConnected = false;
+            setConnStatus(false);
+            console.warn('WebSocket mất kết nối, thử lại sau 5s...', err);
+            setTimeout(connect, 5000);
         });
     }
 
-    function filterUsers() {
-        const query = document.getElementById('searchInput').value.toLowerCase();
-        const items = document.querySelectorAll('.user-item');
-        items.forEach(item => {
-            if (item.id === 'user-BROADCAST') return; // Always show broadcast
-            const text = item.innerText.toLowerCase();
-            if (text.includes(query)) {
-                item.style.display = 'flex';
-            } else {
-                item.style.display = 'none';
-            }
-        });
+    function setConnStatus(online) {
+        const dot = document.getElementById('connDot');
+        if (dot) dot.className = 'conn-dot' + (online ? ' online' : '');
     }
 
+    // ─── INCOMING MESSAGE ───────────────────────────
     function handleIncomingMessage(msg) {
         const sender = msg.sender;
         if (!users[sender]) {
             users[sender] = [];
-            renderUserList();
         }
         users[sender].push(msg);
 
         if (activeUser === sender) {
             appendMessage(msg);
         } else {
-            // Increment unread and update UI
             unreadCounts[sender] = (unreadCounts[sender] || 0) + 1;
-            renderUserList();
+            updateUserItem(sender);
         }
     }
 
-    function renderUserList() {
+    // ─── USER LIST ─────────────────────────────────
+    function filterUsers() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        document.querySelectorAll('.user-item').forEach(item => {
+            if (item.id === 'user-BROADCAST') return;
+            item.style.display = item.querySelector('.user-name')
+                                     .innerText.toLowerCase().includes(q) ? 'flex' : 'none';
+        });
+    }
+
+    function updateUserItem(username) {
         const list = document.getElementById('userList');
+        let div = document.getElementById('user-' + username);
+        const isNew = !div;
 
-        // Manage Broadcast button dynamically
-        let broadcastDiv = document.getElementById('user-BROADCAST');
-        if (!broadcastDiv) {
-            broadcastDiv = document.createElement('div');
-            broadcastDiv.id = 'user-BROADCAST';
-            broadcastDiv.onclick = () => selectUser('BROADCAST');
-            list.appendChild(broadcastDiv);
+        if (isNew) {
+            div = document.createElement('div');
+            div.id = 'user-' + username;
+            div.onclick = () => selectUser(username);
+            // Insert right after broadcast button (index 0)
+            list.insertBefore(div, list.children[1] || null);
         }
-        broadcastDiv.className = 'user-item' + (activeUser === 'BROADCAST' ? ' active' : '');
-        broadcastDiv.innerHTML = `<span>📢 Phát sóng (Tất cả)</span>`;
 
+        const count = unreadCounts[username] || 0;
+        const isActive = activeUser === username;
+        const initials = username.charAt(0).toUpperCase();
+
+        div.className = 'user-item' + (isActive ? ' active' : '');
+        div.innerHTML = `
+            <div class="user-item-left">
+                <div class="user-avatar">${initials}</div>
+                <span class="user-name" style="${count > 0 ? 'font-weight:600;' : ''}">${username}</span>
+            </div>
+            ${count > 0 ? `<span class="badge">${count}</span>` : ''}
+        `;
+        div.onclick = () => selectUser(username);
+    }
+
+    function renderAllUsers() {
         for (const username in users) {
-            if (username === 'BROADCAST') continue;
-            
-            let div = document.getElementById('user-' + username);
-            if (!div) {
-                div = document.createElement('div');
-                div.id = 'user-' + username;
-                div.onclick = () => selectUser(username);
-                // Insert after broadcast but top of the list if new
-                if (list.children.length > 1) {
-                    list.insertBefore(div, list.children[1]);
-                } else {
-                    list.appendChild(div);
-                }
-            }
-            
-            div.className = 'user-item' + (activeUser === username ? ' active' : '');
-            
-            const count = unreadCounts[username] || 0;
-            if (count > 0) {
-                div.innerHTML = `<span><i class="fas fa-user-circle" style="margin-right: 8px; color: #94a3b8;"></i> ${username}</span> <span class="badge">${count}</span>`;
-                div.style.fontWeight = 'bold';
-            } else {
-                div.innerHTML = `<span><i class="fas fa-user-circle" style="margin-right: 8px; color: #94a3b8;"></i> ${username}</span>`;
-                div.style.fontWeight = 'normal';
-            }
+            if (username !== 'BROADCAST') updateUserItem(username);
         }
     }
 
+    // ─── SELECT USER ───────────────────────────────
     function selectUser(username) {
         activeUser = username;
+
+        // Reset unread
+        if (username !== 'BROADCAST') {
+            unreadCounts[username] = 0;
+            updateUserItem(username);
+        }
+
+        // Update header
+        const isBroadcast = username === 'BROADCAST';
+        const initials = isBroadcast ? '📢' : username.charAt(0).toUpperCase();
+        const displayName = isBroadcast ? 'Kênh Phát Sóng (Tất cả Users)' : username;
+
         document.getElementById('chatHeader').innerHTML = `
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-user-circle" style="font-size: 1.5rem; color: #60a5fa;"></i>
-                <span style="font-weight: bold; font-size: 1.1rem;">${username === 'BROADCAST' ? 'Kênh Phát Sóng (Tất cả Users)' : username}</span>
+            <button class="mobile-back-btn" onclick="toggleSidebar()">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+                        display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;">
+                ${initials}
+            </div>
+            <div class="chat-header-info">
+                <div class="chat-header-name">${displayName}</div>
+                <div class="chat-header-status"><i class="fas fa-circle" style="font-size:7px;"></i> Đang hoạt động</div>
             </div>
         `;
+
+        // Enable input
         document.getElementById('adminInput').disabled = false;
+        document.getElementById('adminInput').placeholder = `Nhắn tin cho ${displayName}...`;
         document.getElementById('sendBtn').disabled = false;
         document.getElementById('adminInput').focus();
 
-        if (username !== 'BROADCAST') unreadCounts[username] = 0;
-        renderUserList();
         renderMessages();
+
+        // Mobile: hide sidebar
+        if (window.innerWidth <= 768) {
+            document.getElementById('sidebar').classList.add('hidden');
+        }
     }
 
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.remove('hidden');
+    }
+
+    // ─── RENDER MESSAGES ───────────────────────────
     function renderMessages() {
         const area = document.getElementById('messagesArea');
-        area.style.justifyContent = 'flex-start';
-        area.style.alignItems = 'stretch';
         area.innerHTML = '';
-        if (!activeUser || !users[activeUser]) {
-            if (activeUser && (!users[activeUser] || users[activeUser].length === 0)) {
-                area.style.justifyContent = 'center';
-                area.style.alignItems = 'center';
-                area.innerHTML = `<div style="opacity: 0.5; color: #94a3b8;"><i class="fas fa-comment-dots" style="font-size: 2rem; display: block; text-align: center; margin-bottom: 10px;"></i> Chưa có tin nhắn nào</div>`;
-            }
+
+        const msgs = users[activeUser] || [];
+        if (msgs.length === 0) {
+            area.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-comment-dots"></i>
+                    <p>Chưa có tin nhắn nào</p>
+                </div>`;
             return;
         }
 
-        users[activeUser].forEach(msg => {
-            const div = document.createElement('div');
-            div.className = 'msg ' + (msg.type === 'USER' ? 'user' : 'admin');
-            div.innerText = msg.content;
-            area.appendChild(div);
-        });
+        msgs.forEach(msg => appendMessageNode(area, msg));
         area.scrollTop = area.scrollHeight;
     }
 
     function appendMessage(msg) {
         const area = document.getElementById('messagesArea');
-        const div = document.createElement('div');
-        div.className = 'msg ' + (msg.type === 'USER' ? 'user' : 'admin');
-        div.innerText = msg.content;
-        area.appendChild(div);
-        
-        area.scrollTo({
-            top: area.scrollHeight,
-            behavior: 'smooth'
-        });
+        // Remove empty state if present
+        const empty = area.querySelector('.empty-state');
+        if (empty) empty.remove();
+
+        appendMessageNode(area, msg);
+        area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
     }
 
+    function appendMessageNode(area, msg) {
+        const isUser  = msg.type === 'USER';
+        const isBot   = msg.type === 'BOT';
+        const isAdmin = msg.type === 'ADMIN';
+
+        const wrapper = document.createElement('div');
+        wrapper.style.display = 'flex';
+        wrapper.style.flexDirection = 'column';
+        wrapper.style.alignItems = isAdmin ? 'flex-end' : 'flex-start';
+
+        const senderLabel = document.createElement('div');
+        senderLabel.className = 'msg-sender';
+        senderLabel.innerText = isAdmin ? 'Admin' : (isBot ? '🤖 Bot' : msg.sender);
+
+        const bubble = document.createElement('div');
+        bubble.className = 'msg ' + (isUser ? 'user' : isBot ? 'bot' : 'admin');
+        bubble.innerText = msg.content;
+
+        wrapper.appendChild(senderLabel);
+        wrapper.appendChild(bubble);
+        area.appendChild(wrapper);
+    }
+
+    // ─── SEND MESSAGE ──────────────────────────────
     function sendAdminMessage() {
-        if (!activeUser || !stompClient) return;
+        if (!activeUser || !stompClient || !isConnected) return;
+
         const input = document.getElementById('adminInput');
         const content = input.value.trim();
-        if (content) {
-            const chatMessage = {
-                sender: 'Admin',
-                content: content,
-                type: 'ADMIN',
-                targetUser: activeUser === 'BROADCAST' ? null : activeUser
-            };
+        if (!content) return;
 
-            if (activeUser === 'BROADCAST') {
-                // Send broadcast
-                stompClient.send("/app/chat.adminBroadcast", {}, JSON.stringify(chatMessage));
-            } else {
-                // Send to specific user
-                stompClient.send("/app/chat.adminReply", {}, JSON.stringify(chatMessage));
-            }
+        const chatMessage = {
+            sender: 'Admin',
+            content: content,
+            type: 'ADMIN',
+            targetUser: activeUser === 'BROADCAST' ? null : activeUser
+        };
 
-            // Save locally to display
-            if (!users[activeUser]) users[activeUser] = [];
-            users[activeUser].push(chatMessage);
-            
-            // Re-render empty state to normal if it's the first message
-            if (users[activeUser].length === 1) renderMessages();
-            else appendMessage(chatMessage);
-
-            input.value = '';
+        if (activeUser === 'BROADCAST') {
+            stompClient.send('/app/chat.adminBroadcast', {}, JSON.stringify(chatMessage));
+        } else {
+            stompClient.send('/app/chat.adminReply', {}, JSON.stringify(chatMessage));
         }
+
+        // Show locally immediately
+        if (!users[activeUser]) users[activeUser] = [];
+        users[activeUser].push(chatMessage);
+        appendMessage(chatMessage);
+
+        input.value = '';
+        input.focus();
     }
 
+    // ─── LOAD HISTORY ──────────────────────────────
     async function loadHistory() {
         try {
             const res = await fetch('/admin/chat/history');
-            if (res.ok) {
-                const history = await res.json();
-                for (const targetUser in history) {
-                    if (!users[targetUser]) users[targetUser] = [];
-                    history[targetUser].forEach(msg => {
-                        users[targetUser].push(msg);
-                    });
+            if (!res.ok) return;
+            const history = await res.json();
+
+            for (const targetUser in history) {
+                if (!users[targetUser]) users[targetUser] = [];
+                // Avoid duplicates
+                const existingCount = users[targetUser].length;
+                if (existingCount === 0) {
+                    history[targetUser].forEach(msg => users[targetUser].push(msg));
                 }
-                renderUserList();
             }
+            renderAllUsers();
         } catch (e) {
-            console.error("Lỗi tải lịch sử chat", e);
+            console.error('Lỗi tải lịch sử chat:', e);
         }
     }
 
-    window.onload = function() {
+    // ─── INIT ──────────────────────────────────────
+    window.onload = function () {
         connect();
         loadHistory();
     };

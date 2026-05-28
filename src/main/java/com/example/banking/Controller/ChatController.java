@@ -69,7 +69,8 @@ public class ChatController {
                         "Bot",
                         entry.getValue(),
                         ChatMessageDTO.MessageType.BOT);
-                // Send reply specifically to the user's topic
+                // Save bot reply to history under sender's key
+                addMessageToHistory(chatMessage.getSender(), botReply);
                 messagingTemplate.convertAndSend("/topic/user." + chatMessage.getSender(), botReply);
                 answeredByBot = true;
                 break;
@@ -77,11 +78,11 @@ public class ChatController {
         }
 
         if (!answeredByBot) {
-            // Forward to admin
             ChatMessageDTO botReply = new ChatMessageDTO(
                     "Bot",
                     "Câu hỏi của bạn đã được chuyển đến nhân viên hỗ trợ. Vui lòng đợi trong giây lát...",
                     ChatMessageDTO.MessageType.BOT);
+            addMessageToHistory(chatMessage.getSender(), botReply);
             messagingTemplate.convertAndSend("/topic/user." + chatMessage.getSender(), botReply);
         }
     }

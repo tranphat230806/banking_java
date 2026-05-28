@@ -8,6 +8,50 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 
+    <!-- Kiểm soát chỉ 1 tab trình duyệt một lúc -->
+    <script>
+        (function() {
+            // Kiểm tra hỗ trợ BroadcastChannel
+            if (typeof BroadcastChannel !== 'undefined') {
+                const tabChannel = new BroadcastChannel('banking_tab_control');
+                const TAB_ID = Date.now() + '_' + Math.random();
+
+                // Khi tab này mở, báo cho các tab khác
+                tabChannel.postMessage({ type: 'new_tab', tabId: TAB_ID });
+
+                tabChannel.onmessage = function(event) {
+                    if (event.data.type === 'new_tab' && event.data.tabId !== TAB_ID) {
+                        // Tab khác vừa mở — đẩy tab này sang trang cảnh báo
+                        document.body.innerHTML = `
+                            <div style="
+                                display: flex; flex-direction: column; justify-content: center; align-items: center;
+                                height: 100vh; background: #0f172a; color: white; font-family: Arial, sans-serif; text-align: center; gap: 20px;
+                            ">
+                                <div style="font-size: 4rem;">⚠️</div>
+                                <h2 style="color: #fbbf24; font-size: 1.8rem;">Phát hiện đăng nhập đồng thời!</h2>
+                                <p style="color: #94a3b8; max-width: 400px; line-height: 1.6;">
+                                    Tài khoản của bạn đang được mở trên một tab khác. <br>
+                                    Vì lý do bảo mật, chỉ được dùng 1 tab một lúc.
+                                </p>
+                                <button onclick="window.close()" style="
+                                    padding: 12px 30px; background: #ef4444; color: white;
+                                    border: none; border-radius: 10px; font-size: 1rem;
+                                    cursor: pointer; transition: 0.2s;
+                                ">Dậng tab này</button>
+                                <a href="/dashboard" style="color: #60a5fa; font-size: 0.9rem; margin-top: -10px;">Hoặc tiếp tục tại đây (tab khác sẽ bị dậng)</a>
+                            </div>
+                        `;
+                    }
+                };
+
+                // Dịn dẹp khi đóng tab
+                window.addEventListener('beforeunload', function() {
+                    tabChannel.close();
+                });
+            }
+        })();
+    </script>
+
     <style>
         * {
             margin: 0;
