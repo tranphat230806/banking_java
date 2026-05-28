@@ -4,6 +4,7 @@ import com.example.banking.DTO.BillDTO;
 import com.example.banking.DTO.RegisterDTO;
 import com.example.banking.DTO.TransectionDTO;
 import com.example.banking.Entity.AccountClass;
+import com.example.banking.Entity.AdminClass;
 import com.example.banking.Entity.BillClass;
 import com.example.banking.Entity.TransactionsClass;
 import com.example.banking.Entity.UserClass;
@@ -55,6 +56,9 @@ public class TransectionController {
     private UserRepository userrepo;
 
     @Autowired
+    private AdminRepository adminrepo;
+
+    @Autowired
     EventRepository eventrepo;
 
     @Autowired
@@ -89,10 +93,12 @@ public class TransectionController {
         return "dashboard";
     }
 
-    // Nếu viết chung vào TransectionController của bạn, hãy thay thế hàm /admin/dashboard cũ bằng đoạn mã này:
     @GetMapping("/admin/dashboard")
     public String adminDashboard(Model model, @AuthenticationPrincipal CustomUserDetails adminDetails) {
-        model.addAttribute("adminName", adminDetails.getUsername());
+        AdminClass admin = adminrepo.findByUsername(adminDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy admin"));
+        model.addAttribute("admin", admin);
+        model.addAttribute("adminName", admin.getUsername());
 
         // 1. Thống kê số lượng User trong hệ thống
         long totalUsers = userrepo.count();
@@ -103,7 +109,7 @@ public class TransectionController {
         model.addAttribute("activeUsers", activeUsers);
         model.addAttribute("lockedUsers", lockedUsers);
 
-        // 2. Thống kê tổng số tiền giao dịch thực tế trong ngày hôm nay
+        // 2. Thống kê tổng số tiền giao dịch trong ngày
         java.math.BigDecimal dailyTotal = java.math.BigDecimal.ZERO;
         java.time.LocalDate today = java.time.LocalDate.now();
         List<TransactionsClass> allTransactions = transactionRepository.findAll();
@@ -116,13 +122,13 @@ public class TransectionController {
         }
         model.addAttribute("dailyTotal", dailyTotal);
 
-        // 3. Chuẩn bị mảng dữ liệu doanh thu 12 tháng phát sinh thực tế trong năm nay để vẽ biểu đồ Chart.js
+        // 3. Dữ liệu biểu đồ 12 tháng
         List<Long> monthlyChartData = new java.util.ArrayList<>(java.util.Collections.nCopies(12, 0L));
         int currentYear = java.time.LocalDate.now().getYear();
         for (TransactionsClass t : allTransactions) {
             if (t.getAmount() != null && t.getCreated() != null) {
                 if (t.getCreated().getYear() == currentYear) {
-                    int monthIdx = t.getCreated().getMonthValue() - 1; // 0-11
+                    int monthIdx = t.getCreated().getMonthValue() - 1;
                     if (monthIdx >= 0 && monthIdx < 12) {
                         monthlyChartData.set(monthIdx, monthlyChartData.get(monthIdx) + t.getAmount().longValue());
                     }
@@ -131,11 +137,11 @@ public class TransectionController {
         }
         model.addAttribute("monthlyChartData", monthlyChartData);
 
-        // 4. Lấy danh sách toàn bộ Người dùng trong hệ thống để thực hiện quản lý và gỡ khóa
+        // 4. Danh sách user
         List<UserClass> userList = userrepo.findAll();
         model.addAttribute("userList", userList);
 
-        return "dashboard_admin"; // Khớp với tên file template của bạn
+        return "dashboard_admin";
     }
 
     // API xử lý gỡ Lock cho các user bị khóa chức năng chuyển tiền (Tính năng Transfer Lock sẵn có trong code của bạn)
@@ -226,10 +232,11 @@ public class TransectionController {
         return "fromCK";
     }
 
-    // --- FaceID Endpoints ---
+    // --- FaceID Endpoints (User only) ---
     @PostMapping("/face/register")
     @ResponseBody
-    public Map<String, Object> registerFace(@RequestBody Map<String, String> body, @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public Map<String, Object> registerFace(@RequestBody Map<String, String> body,
+                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
         Map<String, Object> response = new HashMap<>();
         try {
             UserClass user = userrepo.findByUsername(userDetails.getUsername()).orElseThrow();
@@ -287,55 +294,53 @@ public class TransectionController {
 
     @PostMapping("/profile/upload-avatar")
     public String uploadAvatar(@RequestParam("avatar") MultipartFile file,
-                               Principal principal,
+                               @AuthenticationPrincipal CustomUserDetails userDetails,
                                RedirectAttributes redirectAttributes) {
-
         try {
-            String username = principal.getName();
+            String username = userDetails.getUsername();
 
-            // 1. validate file rỗng
             if (file == null || file.isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "Vui lòng chọn ảnh.");
                 return "redirect:/profile";
             }
 
-            // 2. check loại file (QUAN TRỌNG)
             String contentType = file.getContentType();
             if (contentType == null || !contentType.startsWith("image/")) {
                 redirectAttributes.addFlashAttribute("error", "Chỉ được upload file ảnh.");
                 return "redirect:/profile";
             }
 
-            // 3. tạo tên file an toàn hơn
             String originalName = file.getOriginalFilename();
             String extension = originalName != null && originalName.contains(".")
                     ? originalName.substring(originalName.lastIndexOf("."))
                     : ".jpg";
-
             String filename = username + "_" + System.currentTimeMillis() + extension;
 
-            // 4. tạo folder nếu chưa có
             Path uploadPath = Paths.get("uploads/avatars");
             Files.createDirectories(uploadPath);
-
-            // 5. lưu file
             Path filePath = uploadPath.resolve(filename);
             file.transferTo(filePath);
 
-            // 6. update DB
-            UserClass user = userrepo.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+            String avatarUrl = "/uploads/avatars/" + filename;
 
-            user.setAvatar("/uploads/avatars/" + filename);
-            userrepo.save(user);
+            // Cập nhật vào đúng bảng (admin hoặc user)
+            if (userDetails.isAdmin()) {
+                AdminClass admin = adminrepo.findByUsername(username)
+                        .orElseThrow(() -> new RuntimeException("Admin not found"));
+                admin.setAvatar(avatarUrl);
+                adminrepo.save(admin);
+            } else {
+                UserClass user = userrepo.findByUsername(username)
+                        .orElseThrow(() -> new RuntimeException("User not found"));
+                user.setAvatar(avatarUrl);
+                userrepo.save(user);
+            }
 
             redirectAttributes.addFlashAttribute("success", "Cập nhật avatar thành công!");
-
         } catch (Exception e) {
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("error", "Upload thất bại!");
         }
-
         return "redirect:/profile";
     }
 
@@ -426,16 +431,24 @@ public class TransectionController {
     }
     // ------------------------------
 
-    //profileUser
+    // Profile: admin xem profile riêng, user xem profile kèm account
     @GetMapping("/profile")
-    public String fromProfile(Model model, @AuthenticationPrincipal CustomUserDetails user) {
-        String username = user.getUsername();
-        UserClass userclass = userrepo.findByUsername(username).orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
-
-        AccountClass accountClass = accountRepository.findByUserId(userclass.getId()).orElseThrow(() -> new RuntimeException("không tìm thấy account"));
-        model.addAttribute("user", userclass);
-        model.addAttribute("account", accountClass);
-        return "profileUser";
+    public String fromProfile(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails.isAdmin()) {
+            AdminClass admin = adminrepo.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy admin"));
+            model.addAttribute("admin", admin);
+            return "profileAdmin";
+        } else {
+            String username = userDetails.getUsername();
+            UserClass userclass = userrepo.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+            AccountClass accountClass = accountRepository.findByUserId(userclass.getId())
+                    .orElseThrow(() -> new RuntimeException("không tìm thấy account"));
+            model.addAttribute("user", userclass);
+            model.addAttribute("account", accountClass);
+            return "profileUser";
+        }
     }
 
     //History Transection
@@ -621,22 +634,45 @@ public class TransectionController {
 
     @PostMapping("/admin/face-verify/execute")
     @ResponseBody
-    public Map<String, Object> executeAdminFaceVerify(@RequestBody Map<String, String> body, @AuthenticationPrincipal CustomUserDetails userDetails, HttpSession session, jakarta.servlet.http.HttpServletRequest request) {
+    public Map<String, Object> executeAdminFaceVerify(@RequestBody Map<String, String> body,
+                                                      @AuthenticationPrincipal CustomUserDetails userDetails,
+                                                      HttpSession session,
+                                                      jakarta.servlet.http.HttpServletRequest request) {
         Map<String, Object> response = new HashMap<>();
         try {
-            UserClass user = userrepo.findByUsername(userDetails.getUsername()).orElseThrow();
-            boolean isVerified = faceIdService.verifyFace(user, body.get("image"));
+            AdminClass admin = adminrepo.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy admin"));
+            boolean isVerified = faceIdService.verifyFace(admin, body.get("image"));
 
             if (isVerified) {
                 session.setAttribute("admin_face_verified", true);
                 response.put("success", true);
                 response.put("redirect", "/admin/dashboard");
             } else {
-                request.logout(); // Invalidate security context
+                request.logout();
                 session.invalidate();
                 response.put("success", false);
                 response.put("message", "Xác thực khuôn mặt thất bại.");
             }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+        }
+        return response;
+    }
+
+    // --- Admin register FaceID for themselves ---
+    @PostMapping("/admin/face/register")
+    @ResponseBody
+    public Map<String, Object> adminRegisterFace(@RequestBody Map<String, String> body,
+                                                 @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            AdminClass admin = adminrepo.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy admin"));
+            boolean success = faceIdService.registerFace(admin, body.get("image"));
+            response.put("success", success);
+            if (!success) response.put("message", "Không tìm thấy khuôn mặt, vui lòng thử lại.");
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", e.getMessage());

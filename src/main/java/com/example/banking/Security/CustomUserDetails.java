@@ -1,46 +1,97 @@
 package com.example.banking.Security;
 
-import com.example.banking.Entity.AccountClass;
+import com.example.banking.Entity.AdminClass;
 import com.example.banking.Entity.UserClass;
-import com.example.banking.Repository.AccountRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.*;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 
-
+/**
+ * UserDetails dùng chung cho cả UserClass (bảng users) và AdminClass (bảng admins).
+ * Dùng 2 constructor riêng biệt để phân biệt nguồn dữ liệu.
+ */
 public class CustomUserDetails implements UserDetails {
 
+    // Các field chung
+    private final Long id;
+    private final String username;
+    private final String password;
+    private final String fullName;
+    private final String role;
+    private final String status;
+
+    // Chỉ có ở UserClass
     private final UserClass user;
 
+    // Chỉ có ở AdminClass
+    private final AdminClass admin;
+
+    // Constructor cho User thông thường
     public CustomUserDetails(UserClass user) {
         this.user = user;
+        this.admin = null;
+        this.id = user.getId();
+        this.username = user.getUsername();
+        this.password = user.getPassword();
+        this.fullName = user.getFullName();
+        this.role = user.getRole();
+        this.status = user.getStatus();
     }
+
+    // Constructor cho Admin
+    public CustomUserDetails(AdminClass admin) {
+        this.admin = admin;
+        this.user = null;
+        this.id = admin.getId();
+        this.username = admin.getUsername();
+        this.password = admin.getPassword();
+        this.fullName = admin.getFullName();
+        this.role = admin.getRole();
+        this.status = admin.getStatus();
+    }
+
+    // ---- Helper methods ----
+
+    public boolean isAdmin() {
+        return admin != null;
+    }
+
+    /** Trả về UserClass nếu là user thường, null nếu là admin */
+    public UserClass getUser() {
+        return user;
+    }
+
+    /** Trả về AdminClass nếu là admin, null nếu là user thường */
+    public AdminClass getAdmin() {
+        return admin;
+    }
+
+    public Long getUserId() {
+        return id;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    // ---- UserDetails interface ----
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        String roleWithPrefix = user.getRole().toUpperCase();
-        return List.of(new SimpleGrantedAuthority(roleWithPrefix));
+        return List.of(new SimpleGrantedAuthority(role.toUpperCase()));
     }
 
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return password;
     }
 
     @Override
     public String getUsername() {
-        return user.getUsername(); //  login bằng username
-    }
-
-    public Long getUserId() {
-        return user.getId();
-    }
-
-    public String getFullName() {
-        return user.getFullName();  // Lấy fullName từ UserClass
+        return username;
     }
 
     @Override
@@ -50,7 +101,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return !"LOCKED".equals(user.getStatus());
+        return !"LOCKED".equals(status);
     }
 
     @Override
@@ -60,6 +111,6 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return "ACTIVE".equals(user.getStatus());
+        return "ACTIVE".equals(status);
     }
 }

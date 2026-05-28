@@ -23,15 +23,26 @@ public class PasswordConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/forgot", "/reset", "/create", "/forgot/**", "/css/**", "/js/**").permitAll()
-                        // 1. Phân quyền riêng cho Admin (Bao gồm dashboard của admin)
-                        .requestMatchers("/admin/**", "/admin/dashboard").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers("/dashboard").hasAuthority("ROLE_USER")
-                        .requestMatchers("/banking", "/bill/**", "/history", "/profile", "/qr", "/myQR")
-                        .hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "USER", "ADMIN")
+                        // Public routes
+                        .requestMatchers("/login", "/forgot", "/reset", "/create",
+                                "/forgot/**", "/css/**", "/js/**", "/uploads/**").permitAll()
+
+                        // Admin-only routes
+                        .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+
+                        // User-only routes (banking, giao dịch, QR)
+                        .requestMatchers("/dashboard", "/banking", "/bill/**",
+                                "/history", "/qr", "/myQR",
+                                "/transfer/**", "/face/**", "/face-verify/**",
+                                "/scanQR", "/getUserByCode").hasAuthority("ROLE_USER")
+
+                        // Profile & upload: cả admin lẫn user
+                        .requestMatchers("/profile", "/profile/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+
                         .anyRequest().authenticated()
-                ).formLogin(form -> form
-                        .loginPage("/login")// nếu chưa có login page thì tạm bỏ dòng này
+                )
+                .formLogin(form -> form
+                        .loginPage("/login")
                         .loginProcessingUrl("/login")
                         .usernameParameter("username")
                         .passwordParameter("password")

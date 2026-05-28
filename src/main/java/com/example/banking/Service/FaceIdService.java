@@ -1,6 +1,8 @@
 package com.example.banking.Service;
 
+import com.example.banking.Entity.AdminClass;
 import com.example.banking.Entity.UserClass;
+import com.example.banking.Repository.AdminRepository;
 import com.example.banking.Repository.UserRepository;
 import nu.pattern.OpenCV;
 import org.opencv.core.*;
@@ -12,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.nio.file.Paths;
 import java.util.Base64;
 
@@ -22,68 +23,91 @@ public class FaceIdService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private AdminRepository adminRepository;
+
     private CascadeClassifier faceDetector;
     private final String UPLOAD_DIR = "uploads/faces/";
 
     @PostConstruct
     public void init() {
         OpenCV.loadShared();
-        // Load cascade classifier from resources
         String cascadePath = Paths.get("src/main/resources/haarcascade_frontalface_default.xml").toAbsolutePath().toString();
         faceDetector = new CascadeClassifier(cascadePath);
-        
+
         File dir = new File(UPLOAD_DIR);
         if (!dir.exists()) {
             dir.mkdirs();
         }
     }
 
+    // ---- UserClass overloads ----
+
     public boolean registerFace(UserClass user, String base64Image) {
         Mat face = extractFace(base64Image);
         if (face == null || face.empty()) return false;
 
-        String filename = UPLOAD_DIR + user.getId() + "_face.jpg";
+        String filename = UPLOAD_DIR + "user_" + user.getId() + "_face.jpg";
         Imgcodecs.imwrite(filename, face);
 
         user.setFaceRegistered(true);
         user.setFaceImagePath(filename);
         userRepository.save(user);
-
         return true;
     }
 
     public boolean verifyFace(UserClass user, String base64Image) {
         if (!user.isFaceRegistered() || user.getFaceImagePath() == null) return false;
+        return compareFace(base64Image, user.getFaceImagePath(), user.getUsername());
+    }
 
+    // ---- AdminClass overloads ----
+
+    public boolean registerFace(AdminClass admin, String base64Image) {
+        Mat face = extractFace(base64Image);
+        if (face == null || face.empty()) return false;
+
+        String filename = UPLOAD_DIR + "admin_" + admin.getId() + "_face.jpg";
+        Imgcodecs.imwrite(filename, face);
+
+        admin.setFaceRegistered(true);
+        admin.setFaceImagePath(filename);
+        adminRepository.save(admin);
+        return true;
+    }
+
+    public boolean verifyFace(AdminClass admin, String base64Image) {
+        if (!admin.isFaceRegistered() || admin.getFaceImagePath() == null) return false;
+        return compareFace(base64Image, admin.getFaceImagePath(), admin.getUsername());
+    }
+
+    // ---- Private helpers ----
+
+    private boolean compareFace(String base64Image, String storedImagePath, String username) {
         Mat liveFace = extractFace(base64Image);
         if (liveFace == null || liveFace.empty()) return false;
 
-        Mat storedFace = Imgcodecs.imread(user.getFaceImagePath(), Imgcodecs.IMREAD_GRAYSCALE);
+        Mat storedFace = Imgcodecs.imread(storedImagePath, Imgcodecs.IMREAD_GRAYSCALE);
         if (storedFace.empty()) return false;
 
-        // Resize both to standard size for comparison
         Size stdSize = new Size(200, 200);
         Mat liveResized = new Mat();
         Mat storedResized = new Mat();
         Imgproc.resize(liveFace, liveResized, stdSize);
         Imgproc.resize(storedFace, storedResized, stdSize);
 
-        // Simple Mean Squared Error (MSE) comparison or SSIM
-        // For simplicity and speed, we use Template Matching CCOEFF_NORMED
         Mat result = new Mat();
         Imgproc.matchTemplate(storedResized, liveResized, result, Imgproc.TM_CCOEFF_NORMED);
-        
-        Core.MinMaxLocResult mmr = Core.minMaxLoc(result);
-        double similarity = mmr.maxVal; // 1.0 is a perfect match
-        System.out.println(">>> FaceID Verify - User: " + user.getUsername() + " - Similarity score: " + similarity);
 
-        // Threshold for face match (adjustable)
-        return similarity > 0.55; // Slightly lower threshold for better UX with template matching
+        Core.MinMaxLocResult mmr = Core.minMaxLoc(result);
+        double similarity = mmr.maxVal;
+        System.out.println(">>> FaceID Verify - User: " + username + " - Similarity score: " + similarity);
+
+        return similarity > 0.55;
     }
 
     private Mat extractFace(String base64Image) {
         try {
-            // Remove data:image/jpeg;base64, prefix if present
             if (base64Image.contains(",")) {
                 base64Image = base64Image.split(",")[1];
             }
@@ -102,9 +126,8 @@ public class FaceIdService {
             faceDetector.detectMultiScale(gray, faceDetections, 1.1, 3, 0, new Size(100, 100), new Size());
 
             Rect[] rects = faceDetections.toArray();
-            if (rects.length == 0) return null; // No face detected
+            if (rects.length == 0) return null;
 
-            // Assume the largest face is the target
             Rect targetFace = rects[0];
             for (Rect rect : rects) {
                 if (rect.area() > targetFace.area()) {
@@ -112,9 +135,7 @@ public class FaceIdService {
                 }
             }
 
-            // Crop face
-            Mat croppedFace = new Mat(gray, targetFace);
-            return croppedFace;
+            return new Mat(gray, targetFace);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
