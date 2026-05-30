@@ -1,4 +1,28 @@
 package com.example.banking.Controller;
+import java.io.ByteArrayOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.banking.DTO.BillDTO;
 import com.example.banking.DTO.RegisterDTO;
@@ -8,35 +32,25 @@ import com.example.banking.Entity.AdminClass;
 import com.example.banking.Entity.BillClass;
 import com.example.banking.Entity.TransactionsClass;
 import com.example.banking.Entity.UserClass;
-import com.example.banking.Repository.*;
+import com.example.banking.Repository.AccountRepository;
+import com.example.banking.Repository.AdminRepository;
+import com.example.banking.Repository.BillRepository;
+import com.example.banking.Repository.EventRepository;
+import com.example.banking.Repository.TransactionRepository;
+import com.example.banking.Repository.UserRepository;
 import com.example.banking.Security.CustomUserDetails;
-import com.example.banking.Service.*;
-import jakarta.servlet.http.HttpSession;
+import com.example.banking.Service.AccountService;
+import com.example.banking.Service.FaceIdService;
+import com.example.banking.Service.RegisterService;
+import com.example.banking.Service.ResetService;
+import com.example.banking.Service.TransferSecurityService;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.ByteArrayOutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.Principal;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
@@ -109,26 +123,18 @@ public class TransectionController {
         model.addAttribute("activeUsers", activeUsers);
         model.addAttribute("lockedUsers", lockedUsers);
 
-        // 2. Thống kê tổng số tiền giao dịch trong ngày và biểu đồ 24h
+        // 2. Thống kê tổng số tiền giao dịch trong ngày
         java.math.BigDecimal dailyTotal = java.math.BigDecimal.ZERO;
         java.time.LocalDate today = java.time.LocalDate.now();
         List<TransactionsClass> allTransactions = transactionRepository.findAll();
-        
-        List<Long> dailyChartData = new java.util.ArrayList<>(java.util.Collections.nCopies(24, 0L));
-        
         for (TransactionsClass t : allTransactions) {
             if (t.getAmount() != null && t.getCreated() != null) {
                 if (t.getCreated().toLocalDate().isEqual(today)) {
                     dailyTotal = dailyTotal.add(t.getAmount());
-                    int hour = t.getCreated().getHour();
-                    if (hour >= 0 && hour < 24) {
-                        dailyChartData.set(hour, dailyChartData.get(hour) + t.getAmount().longValue());
-                    }
                 }
             }
         }
         model.addAttribute("dailyTotal", dailyTotal);
-        model.addAttribute("dailyChartData", dailyChartData);
 
         // 3. Dữ liệu biểu đồ 12 tháng
         List<Long> monthlyChartData = new java.util.ArrayList<>(java.util.Collections.nCopies(12, 0L));
@@ -498,27 +504,22 @@ public class TransectionController {
             dto.setPhone(phone);
             dto.setAvatar(avatar);
 
-            // Kiểm tra username đã tồn tại chưa
+            // Kiểm tra xem username đã tồn tại chưa
             if (createser.isUsernameTaken(dto.getUsername())) {
                 model.addAttribute("error", "Tên đăng nhập đã tồn tại, vui lòng chọn tên khác!");
-                return "formCreate";
-            }
-            // Kiểm tra email đã được dùng chưa
-            if (createser.isEmailTaken(dto.getEmail())) {
-                model.addAttribute("error", "Email này đã được liên kết với một tài khoản khác!");
-                return "formCreate";
+                return "formCreate";  // Trả về trang tạo tài khoản nếu có lỗi
             }
             // Gọi service để tạo user và tài khoản
             createser.registerUser(dto);
             model.addAttribute("success", "Bạn đã đăng kí thành công!!!");
-            return "redirect:/login";
+            return "redirect:/login";  // Redirect đến trang login sau khi đăng ký thành công
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
             return "formCreate";
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("error", "Đã có lỗi xảy ra, vui lòng thử lại.");
-            return "formCreate";
+            return "formCreate";  // Nếu có lỗi, trả về trang tạo tài khoản
         }
     }
 
@@ -545,11 +546,9 @@ public class TransectionController {
     }
 
     @PostMapping("/forgot")
-    public String sendOtp(@RequestParam String username,
-                          @RequestParam String email,
-                          Model model) {
+    public String sendOtp(@RequestParam String email, Model model, @AuthenticationPrincipal CustomUserDetails user) {
         try {
-            resetser.guiOTP(username.trim(), email.trim());
+            resetser.guiOTP(user.getUsername(),email);
             model.addAttribute("email", email);
             return "resetPassword";
         } catch (Exception e) {
