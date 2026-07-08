@@ -128,9 +128,6 @@ public class TransectionController {
         java.math.BigDecimal dailyTotal = java.math.BigDecimal.ZERO;
         java.time.LocalDate today = java.time.LocalDate.now();
         List<TransactionsClass> allTransactions = transactionRepository.findAll();
-
-        List<Long> dailyChartData = new java.util.ArrayList<>(java.util.Collections.nCopies(24, 0L));
-
         for (TransactionsClass t : allTransactions) {
             if (t.getAmount() != null && t.getCreated() != null) {
                 if (t.getCreated().toLocalDate().isEqual(today)) {
@@ -565,9 +562,7 @@ public class TransectionController {
     }
 
     @PostMapping("/forgot")
-    public String sendOtp(@RequestParam String username,
-            @RequestParam String email,
-            Model model) {
+    public String sendOtp(@RequestParam String email, Model model, @AuthenticationPrincipal CustomUserDetails user) {
         try {
             resetser.guiOTP(user.getUsername(), email);
             model.addAttribute("email", email);
