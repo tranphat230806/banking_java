@@ -73,10 +73,10 @@ public class TransectionController {
         return "login";
     }
 
-    //Dashboard
+    // Dashboard
     @GetMapping("/dashboard")
     public String home(Model model,
-                       @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         String name = userDetails.getUsername();
 
@@ -84,7 +84,7 @@ public class TransectionController {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
 
         model.addAttribute("user", user);
-        //event
+        // event
         model.addAttribute("event", eventrepo.findByStatusTrueOrderByDisLayOrDerAsc());
         // transaction history
         AccountClass account = user.getAccounts();
@@ -113,9 +113,9 @@ public class TransectionController {
         java.math.BigDecimal dailyTotal = java.math.BigDecimal.ZERO;
         java.time.LocalDate today = java.time.LocalDate.now();
         List<TransactionsClass> allTransactions = transactionRepository.findAll();
-        
+
         List<Long> dailyChartData = new java.util.ArrayList<>(java.util.Collections.nCopies(24, 0L));
-        
+
         for (TransactionsClass t : allTransactions) {
             if (t.getAmount() != null && t.getCreated() != null) {
                 if (t.getCreated().toLocalDate().isEqual(today)) {
@@ -152,7 +152,8 @@ public class TransectionController {
         return "dashboard_admin";
     }
 
-    // API xử lý gỡ Lock cho các user bị khóa chức năng chuyển tiền (Tính năng Transfer Lock sẵn có trong code của bạn)
+    // API xử lý gỡ Lock cho các user bị khóa chức năng chuyển tiền (Tính năng
+    // Transfer Lock sẵn có trong code của bạn)
     @PostMapping("/admin/unlock-user-transfer")
     @ResponseBody
     public Map<String, Object> adminUnlockUserTransfer(@RequestParam Long userId) {
@@ -160,7 +161,8 @@ public class TransectionController {
         try {
             UserClass user = userrepo.findById(userId).orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
 
-            // Gọi service xử lý mở khóa hoặc reset trực tiếp trạng thái lock trong trường hợp khẩn cấp
+            // Gọi service xử lý mở khóa hoặc reset trực tiếp trạng thái lock trong trường
+            // hợp khẩn cấp
             // Ở đây ta dùng trực tiếp phương thức reset cơ chế bảo vệ của bạn
             user.setTransferLocked(false);
             userrepo.save(user);
@@ -174,13 +176,13 @@ public class TransectionController {
         return response;
     }
 
-    //Transection
+    // Transection
     @GetMapping("/banking")
     public String showForm(Model model,
-                           @AuthenticationPrincipal CustomUserDetails user,
-                           @RequestParam(required = false, name = "account") String account,
-                           @RequestParam(required = false) String amount,
-                           @RequestParam(required = false) String description) {
+            @AuthenticationPrincipal CustomUserDetails user,
+            @RequestParam(required = false, name = "account") String account,
+            @RequestParam(required = false) String amount,
+            @RequestParam(required = false) String description) {
 
         model.addAttribute("fullname", user.getFullName());
 
@@ -219,14 +221,16 @@ public class TransectionController {
 
     @PostMapping("/banking")
     public String Transetion_in_banking(@ModelAttribute TransectionDTO request,
-                                        @AuthenticationPrincipal CustomUserDetails userDetails,
-                                        BillDTO billdto, Model model, HttpSession session) {
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            BillDTO billdto, Model model, HttpSession session) {
         try {
-            UserClass user = userrepo.findByUsername(userDetails.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
+            UserClass user = userrepo.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
             // Check if PIN is set up
             if (!transferSecurityService.isPinSetup(user)) {
-                model.addAttribute("message", "Bạn chưa thiết lập mã PIN chuyển tiền. Vui lòng thiết lập trong Profile.");
+                model.addAttribute("message",
+                        "Bạn chưa thiết lập mã PIN chuyển tiền. Vui lòng thiết lập trong Profile.");
                 return "fromCK";
             }
 
@@ -244,13 +248,14 @@ public class TransectionController {
     @PostMapping("/face/register")
     @ResponseBody
     public Map<String, Object> registerFace(@RequestBody Map<String, String> body,
-                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         Map<String, Object> response = new HashMap<>();
         try {
             UserClass user = userrepo.findByUsername(userDetails.getUsername()).orElseThrow();
             boolean success = faceIdService.registerFace(user, body.get("image"));
             response.put("success", success);
-            if (!success) response.put("message", "Không tìm thấy khuôn mặt, vui lòng thử lại.");
+            if (!success)
+                response.put("message", "Không tìm thấy khuôn mặt, vui lòng thử lại.");
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", e.getMessage());
@@ -268,7 +273,8 @@ public class TransectionController {
 
     @PostMapping("/face-verify/execute")
     @ResponseBody
-    public Map<String, Object> executeFaceVerify(@RequestBody Map<String, String> body, @AuthenticationPrincipal CustomUserDetails userDetails, HttpSession session) {
+    public Map<String, Object> executeFaceVerify(@RequestBody Map<String, String> body,
+            @AuthenticationPrincipal CustomUserDetails userDetails, HttpSession session) {
         Map<String, Object> response = new HashMap<>();
         try {
             UserClass user = userrepo.findByUsername(userDetails.getUsername()).orElseThrow();
@@ -302,8 +308,8 @@ public class TransectionController {
 
     @PostMapping("/profile/upload-avatar")
     public String uploadAvatar(@RequestParam("avatar") MultipartFile file,
-                               @AuthenticationPrincipal CustomUserDetails userDetails,
-                               RedirectAttributes redirectAttributes) {
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            RedirectAttributes redirectAttributes) {
         try {
             String username = userDetails.getUsername();
 
@@ -355,7 +361,8 @@ public class TransectionController {
     // --- Transfer PIN Endpoints ---
     @PostMapping("/profile/setup-pin")
     @ResponseBody
-    public Map<String, Object> setupPin(@RequestBody Map<String, String> body, @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public Map<String, Object> setupPin(@RequestBody Map<String, String> body,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         Map<String, Object> response = new HashMap<>();
         try {
             UserClass user = userrepo.findByUsername(userDetails.getUsername()).orElseThrow();
@@ -369,7 +376,8 @@ public class TransectionController {
     }
 
     @GetMapping("/transfer/verify-pin")
-    public String verifyPinPage(HttpSession session, Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public String verifyPinPage(HttpSession session, Model model,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         if (session.getAttribute("pendingTransfer") == null) {
             return "redirect:/banking";
         }
@@ -380,7 +388,8 @@ public class TransectionController {
 
     @PostMapping("/transfer/verify-pin")
     @ResponseBody
-    public Map<String, Object> verifyPin(@RequestBody Map<String, String> body, @AuthenticationPrincipal CustomUserDetails userDetails, HttpSession session) {
+    public Map<String, Object> verifyPin(@RequestBody Map<String, String> body,
+            @AuthenticationPrincipal CustomUserDetails userDetails, HttpSession session) {
         Map<String, Object> response = new HashMap<>();
         try {
             UserClass user = userrepo.findByUsername(userDetails.getUsername()).orElseThrow();
@@ -392,7 +401,8 @@ public class TransectionController {
 
                 if (pendingTransfer != null) {
                     // Check FaceID requirement
-                    if (pendingTransfer.getAmount() != null && pendingTransfer.getAmount().compareTo(new java.math.BigDecimal("9999999")) > 0) {
+                    if (pendingTransfer.getAmount() != null
+                            && pendingTransfer.getAmount().compareTo(new java.math.BigDecimal("9999999")) > 0) {
                         if (!user.isFaceRegistered()) {
                             response.put("success", false);
                             response.put("message", "Giao dịch yêu cầu FaceID nhưng chưa đăng ký.");
@@ -424,13 +434,15 @@ public class TransectionController {
 
     @PostMapping("/transfer/unlock")
     @ResponseBody
-    public Map<String, Object> unlockTransfer(@RequestBody Map<String, String> body, @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public Map<String, Object> unlockTransfer(@RequestBody Map<String, String> body,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         Map<String, Object> response = new HashMap<>();
         try {
             UserClass user = userrepo.findByUsername(userDetails.getUsername()).orElseThrow();
             boolean success = transferSecurityService.unlockAccount(user, body.get("otp"));
             response.put("success", success);
-            if (!success) response.put("message", "OTP không hợp lệ hoặc đã hết hạn.");
+            if (!success)
+                response.put("message", "OTP không hợp lệ hoặc đã hết hạn.");
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", e.getMessage());
@@ -460,12 +472,15 @@ public class TransectionController {
         }
     }
 
-    //History Transection
+    // History Transection
     @GetMapping("/history")
     public String fromHistory(Model model, @AuthenticationPrincipal CustomUserDetails user) {
-        UserClass userClass = userrepo.findByUsername(user.getUsername()).orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
-        AccountClass account = accountRepository.findByUserId(userClass.getId()).orElseThrow(() -> new RuntimeException("không tìm thấy tài khoản này!!!"));
-        model.addAttribute("list", transactionRepository.findByFromAccountOrToAccountOrderByCreatedDesc(account, account));
+        UserClass userClass = userrepo.findByUsername(user.getUsername())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+        AccountClass account = accountRepository.findByUserId(userClass.getId())
+                .orElseThrow(() -> new RuntimeException("không tìm thấy tài khoản này!!!"));
+        model.addAttribute("list",
+                transactionRepository.findByFromAccountOrToAccountOrderByCreatedDesc(account, account));
         model.addAttribute("account", account);
         model.addAttribute("user", userClass);
         return "historyTransection";
@@ -474,7 +489,7 @@ public class TransectionController {
     @Autowired
     RegisterService createser;
 
-    //Create
+    // Create
     @GetMapping("/create")
     public String fromCreate() {
         return "formCreate";
@@ -525,7 +540,7 @@ public class TransectionController {
     // Bill
     @GetMapping("/bill/{id}")
     public String showBill(@PathVariable Long id,
-                           Model model) {
+            Model model) {
 
         BillClass bill = billrepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bill"));
@@ -546,8 +561,8 @@ public class TransectionController {
 
     @PostMapping("/forgot")
     public String sendOtp(@RequestParam String username,
-                          @RequestParam String email,
-                          Model model) {
+            @RequestParam String email,
+            Model model) {
         try {
             resetser.guiOTP(username.trim(), email.trim());
             model.addAttribute("email", email);
@@ -565,8 +580,8 @@ public class TransectionController {
 
     @PostMapping("/reset")
     public String fromReset(@RequestParam String otp,
-                            @RequestParam String password,
-                            Model model) {
+            @RequestParam String password,
+            Model model) {
         try {
             resetser.resetPassword(otp, password);
             model.addAttribute("message", "Đổi mật khẩu thành công");
@@ -577,7 +592,7 @@ public class TransectionController {
         }
     }
 
-    //function QR payment
+    // function QR payment
     @GetMapping("/qr")
     public String qrPage() {
         return "qrScan";
@@ -612,32 +627,32 @@ public class TransectionController {
     @ResponseBody
     public String getUserByCode(@RequestParam String username) {
 
-        return accountRepository.findByCode(username).map(acc -> acc.getUser().getFullName()).orElse("Tài khoản này không tồn tại trong hệ thống");
+        return accountRepository.findByCode(username).map(acc -> acc.getUser().getFullName())
+                .orElse("Tài khoản này không tồn tại trong hệ thống");
     }
     // test spi findCode
-//    @GetMapping("/getUserByCode")
-//    @ResponseBody
-//    public String test() {
-//        return "OK";
-//    }
+    // @GetMapping("/getUserByCode")
+    // @ResponseBody
+    // public String test() {
+    // return "OK";
+    // }
 
     // create myQR
     @GetMapping(value = "/myQR", produces = MediaType.IMAGE_PNG_VALUE)
     @ResponseBody
     public byte[] myQR(@AuthenticationPrincipal CustomUserDetails user) throws Exception {
 
-        AccountClass acc = accountRepository.findByUserId(user.getUserId()).orElseThrow(() -> new RuntimeException("Account not found"));
+        AccountClass acc = accountRepository.findByUserId(user.getUserId())
+                .orElseThrow(() -> new RuntimeException("Account not found"));
         String data = acc.getCode();
 
         QRCodeWriter writer = new QRCodeWriter();
 
-        BitMatrix matrix =
-                writer.encode(data,
-                        BarcodeFormat.QR_CODE,
-                        300, 300);
+        BitMatrix matrix = writer.encode(data,
+                BarcodeFormat.QR_CODE,
+                300, 300);
 
-        ByteArrayOutputStream out =
-                new ByteArrayOutputStream();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         MatrixToImageWriter.writeToStream(
                 matrix, "PNG", out);
@@ -658,9 +673,9 @@ public class TransectionController {
     @PostMapping("/admin/face-verify/execute")
     @ResponseBody
     public Map<String, Object> executeAdminFaceVerify(@RequestBody Map<String, String> body,
-                                                      @AuthenticationPrincipal CustomUserDetails userDetails,
-                                                      HttpSession session,
-                                                      jakarta.servlet.http.HttpServletRequest request) {
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpSession session,
+            jakarta.servlet.http.HttpServletRequest request) {
         Map<String, Object> response = new HashMap<>();
         try {
             AdminClass admin = adminrepo.findByUsername(userDetails.getUsername())
@@ -689,8 +704,8 @@ public class TransectionController {
     @PostMapping("/admin/face-verify/register-and-verify")
     @ResponseBody
     public Map<String, Object> registerAndVerifyAdminFace(@RequestBody Map<String, String> body,
-                                                          @AuthenticationPrincipal CustomUserDetails userDetails,
-                                                          HttpSession session) {
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpSession session) {
         Map<String, Object> response = new HashMap<>();
         try {
             AdminClass admin = adminrepo.findByUsername(userDetails.getUsername())
@@ -718,14 +733,15 @@ public class TransectionController {
     @PostMapping("/admin/face/register")
     @ResponseBody
     public Map<String, Object> adminRegisterFace(@RequestBody Map<String, String> body,
-                                                 @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         Map<String, Object> response = new HashMap<>();
         try {
             AdminClass admin = adminrepo.findByUsername(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy admin"));
             boolean success = faceIdService.registerFace(admin, body.get("image"));
             response.put("success", success);
-            if (!success) response.put("message", "Không tìm thấy khuôn mặt, vui lòng thử lại.");
+            if (!success)
+                response.put("message", "Không tìm thấy khuôn mặt, vui lòng thử lại.");
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", e.getMessage());

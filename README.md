@@ -122,20 +122,30 @@ PUT /api/bills/{billId}/pay
 
 ## 🗂️ Cấu Trúc Dự Án
 
-```
-banking/
-├── src/main/java/com/example/banking/
-│   ├── Controller/        # REST endpoints
-│   ├── Service/           # Business logic
-│   ├── Repository/        # Data access
-│   ├── Entity/            # JPA entities
-│   ├── DTO/               # Data transfer objects
-│   ├── Security/          # Security config
-│   └── config/            # Application config
-├── src/main/resources/
-│   ├── application.properties
-│   └── templates/         # HTML templates
-├── pom.xml
+```text
+banking_java/
+├── src/
+│   ├── main/
+│   │   ├── java/com/example/banking/
+│   │   │   ├── config/            # Cấu hình ứng dụng (WebMvc, Security...)
+│   │   │   ├── Controller/        # Xử lý các request (REST endpoints & Web)
+│   │   │   ├── DTO/               # Data transfer objects
+│   │   │   ├── Entity/            # JPA entities (Models)
+│   │   │   ├── Repository/        # Tương tác với Database
+│   │   │   ├── Security/          # Cấu hình bảo mật (Jwt, Filters...)
+│   │   │   ├── Service/           # Xử lý logic nghiệp vụ
+│   │   │   └── BankingApplication.java # File chạy Spring Boot chính
+│   │   └── resources/
+│   │       ├── static/            # Các file tĩnh (CSS, JS, Images...)
+│   │       ├── templates/         # Giao diện HTML (Thymeleaf)
+│   │       ├── application.properties # File cấu hình Spring Boot
+│   │       ├── haarcascade_frontalface_default.xml # Model cho nhận diện khuôn mặt OpenCV
+│   │       └── insert_admin.sql   # Script SQL tạo sẵn admin
+│   └── test/                      # Mã nguồn test
+├── uploads/             # Thư mục chứa file người dùng upload (thường bị bỏ qua bởi git)
+├── .env                 # Chứa các biến môi trường cấu hình dự án
+├── .gitignore           # File cấu hình bỏ qua của Git
+├── pom.xml              # Khai báo thư viện Maven
 └── README.md
 ```
 
@@ -210,7 +220,7 @@ curl http://localhost:8080/actuator/health
 mvn test
 
 # Chạy test cụ thể
-mvn test -Dtest=StudentTestApplicationTests
+mvn test -Dtest=BankingApplicationTests
 
 # Test coverage
 mvn test jacoco:report
