@@ -4,6 +4,7 @@ import com.example.banking.Security.CustomAuthenticationSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,19 +29,22 @@ public class PasswordConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(auth -> auth
+        http.csrf(csrf -> csrf
+                        // Chỉ bỏ qua CSRF cho các đường dẫn API để Postman gọi không bị 403
+                        .ignoringRequestMatchers("/api/**")
+                )
+                .authorizeHttpRequests(auth -> auth
                         // Public routes
                         .requestMatchers("/login", "/forgot", "/reset", "/create",
                                 "/forgot/**", "/css/**", "/js/**", "/uploads/**").permitAll()
 
-                        // Admin-only routes
                         .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
 
                         // User-only routes (banking, giao dịch, QR)
                         .requestMatchers("/dashboard", "/banking", "/bill/**",
                                 "/history", "/qr", "/myQR",
                                 "/transfer/**", "/face/**", "/face-verify/**",
-                                "/scanQR", "/getUserByCode").hasAuthority("ROLE_USER")
+                                "/scanQR", "/getUserByCode","/api/**").hasAuthority("ROLE_USER")
 
                         // Profile & upload: cả admin lẫn user
                         .requestMatchers("/profile", "/profile/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
