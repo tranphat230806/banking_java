@@ -11,21 +11,27 @@
 
 - **🔐 Xác thực an toàn** - Đăng ký, đăng nhập, khôi phục mật khẩu
 - **💳 Quản lý tài khoản** - Tạo và quản lý nhiều tài khoản ngân hàng
-- **💰 Xử lý giao dịch** -chuyển tiền giữa các tài khoản
+- **💰 Xử lý giao dịch** - chuyển tiền giữa các tài khoản
+- **🤖 Nhận Diện Khuôn Mặt (FaceID)** - Tích hợp AI OpenCV để xác thực sinh trắc học bảo vệ các giao dịch có giá trị lớn
 - **📝 Quản lý hóa đơn** - Theo dõi và thanh toán hóa đơn
 - **📊 Lịch sử giao dịch** - Xem chi tiết tất cả giao dịch
-- **🛡️ Bảo mật cao** - Mã hóa bcrypt, JWT token, RBAC
+- **👨‍💼 Quản Trị & Hỗ Trợ Khách Hàng (Admin)** - Portal dành riêng cho Admin giám sát hệ thống, hỗ trợ giải đáp người dùng và xử lý các vấn đề tài khoản khẩn cấp (vd: mở khóa giao dịch)
+- **🛡️ Bảo mật cao** - Mã hóa bcrypt, JWT token, RBAC, PIN code
 
 ## ⚙️ Stack Công Nghệ
 
-| Lớp          | Công Nghệ            | Phiên Bản |
-|--------------|----------------------|-----------|
-| **Backend**  | Spring Boot          | 2.x+      |
-| **Ngôn Ngữ** | Java                 | 11+       |
-| **Database** | MySQL + JPA          | Latest    |
-| **Security** | Spring Security, JWT | 5.x+      |
-| **Build**    | Maven                | 3.6+      |
-| **Test**     | JUnit 5              | 5.x+      |
+| Lớp / Chức Năng          | Công Nghệ                                  | Phiên Bản |
+|--------------------------|--------------------------------------------|-----------|
+| **Ngôn Ngữ**             | Java                                       | 21        |
+| **Backend Framework**    | Spring Boot                                | 3.x+      |
+| **Giao Diện (Frontend)** | Thymeleaf, HTML5, CSS3, Vanilla JS         | -         |
+| **Cơ Sở Dữ Liệu**        | MySQL & Spring Data JPA                    | Latest    |
+| **Bảo Mật**              | Spring Security, JWT, Bcrypt               | -         |
+| **Real-time (Chat)**     | Spring WebSocket, STOMP, SockJS            | -         |
+| **Nhận Diện Khuôn Mặt**  | OpenCV (Java)                              | 4.7.0     |
+| **Mã QR (Tạo/Quét)**     | ZXing (Zebra Crossing)                     | 3.5.3     |
+| **Biến Môi Trường**      | dotenv-java                                | 3.0.0     |
+| **Build Tool**           | Maven                                      | 3.6+      |
 
 ## 🚀 Quick Start
 
@@ -119,6 +125,24 @@ GET /api/bills?status=PENDING
 PUT /api/bills/{billId}/pay
 {"accountId":1,"paymentMethod":"ACCOUNT_TRANSFER"}
 ```
+
+## 💡 Chi Tiết Luồng Hoạt Động (Core Logic)
+
+### 1. Luồng Chuyển Tiền & Bảo Mật 2 Lớp (PIN + FaceID)
+Hệ thống phân chia rủi ro giao dịch dựa trên mức tiền:
+- **Dưới 10.000.000 VNĐ:** Người dùng chỉ cần xác thực bằng mã **PIN**. Nếu nhập sai mã PIN quá 5 lần, tính năng chuyển khoản sẽ bị khóa tạm thời và hệ thống sẽ tự động gửi mã OTP qua Email để hỗ trợ mở khóa.
+- **Từ 10.000.000 VNĐ trở lên:** Sau bước nhập PIN thành công, hệ thống bắt buộc điều hướng (`redirect`) sang màn hình **FaceID**. Hệ thống sẽ dùng camera để chụp ảnh và đẩy về Server. Model AI của thư viện **OpenCV** sẽ nhận diện và đối chiếu khuôn mặt. Giao dịch chỉ thành công khi khuôn mặt khớp với dữ liệu lúc đăng ký.
+
+### 2. Quét Mã QR Tự Động Bằng ZXing
+Trải nghiệm chuyển khoản được tối ưu tối đa, chống thao tác nhầm lẫn:
+- **Tạo mã (Bên nhận):** Hệ thống dùng thư viện **ZXing** (`QRCodeWriter`) để mã hóa số tài khoản (`accountCode`) thành một ảnh QR định dạng PNG và trả thẳng về trình duyệt hiển thị.
+- **Quét mã (Bên chuyển):** Khi người dùng dùng camera quét, trình duyệt bắt ảnh và gửi lên API. Server giải mã bức ảnh để lấy ra số tài khoản, sau đó Frontend tự động điền vào form và tự động truy xuất hiển thị **Tên người nhận** ngay trên màn hình.
+
+### 3. Hệ Thống Chat Hỗ Trợ Real-time (WebSocket)
+Hỗ trợ tương tác mượt mà giữa User và Admin dựa trên **Spring WebSocket + STOMP**:
+- **Auto-reply Bot (Trợ lý ảo):** Tin nhắn gửi lên sẽ được quét từ khóa. Nếu người dùng nhắn các từ như *"xin chào", "quên mật khẩu", "chuyển tiền"*, Bot sẽ trả lời ngay lập tức theo kịch bản có sẵn.
+- **Live Support:** Nếu rớt khỏi kịch bản của Bot, tin nhắn sẽ được đẩy trực tiếp lên màn hình Admin (`/topic/admin`). Admin có thể chat trực tiếp 1:1 với user hoặc phát thanh (`Broadcast`) thông báo khẩn cấp tới tất cả những ai đang online.
+- Dữ liệu chat được tổ chức lưu trữ trên In-memory (`ConcurrentHashMap`) giúp tốc độ phản hồi tính bằng mili-giây.
 
 ## 🗂️ Cấu Trúc Dự Án
 
@@ -296,6 +320,7 @@ curl -H "Authorization: Bearer <your_token>" http://localhost:8080/api/accounts
 
 ## 🔒 Security
 
+- ✅ **Xác Thực Khuôn Mặt (OpenCV FaceID):** Tự động yêu cầu xác thực bằng khuôn mặt khi thực hiện các giao dịch chuyển tiền vượt hạn mức an toàn (VD: > 10.000.000đ).
 - ✅ OWASP Top 10 compliant
 - ✅ SQL Injection prevention
 - ✅ XSS protection
